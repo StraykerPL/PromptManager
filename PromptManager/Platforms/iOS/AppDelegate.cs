@@ -1,6 +1,6 @@
-﻿using Foundation;
+using Foundation;
 
-namespace Prompt_Manager
+namespace PromptManager
 {
     [Register("AppDelegate")]
     public class AppDelegate : MauiUIApplicationDelegate

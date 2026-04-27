@@ -1,6 +1,6 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection;
 
-namespace Prompt_Manager
+namespace PromptManager
 {
     public partial class App : Application
     {

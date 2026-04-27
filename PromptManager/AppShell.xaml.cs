@@ -1,4 +1,4 @@
-﻿namespace Prompt_Manager
+namespace PromptManager
 {
     public partial class AppShell : Shell
     {

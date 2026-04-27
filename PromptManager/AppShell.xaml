@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <Shell
-    x:Class="Prompt_Manager.AppShell"
+    x:Class="PromptManager.AppShell"
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-    xmlns:local="clr-namespace:Prompt_Manager"
+    xmlns:local="clr-namespace:PromptManager"
     Title="Prompt Manager">
 
     <ShellContent

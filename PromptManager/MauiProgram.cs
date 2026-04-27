@@ -1,6 +1,6 @@
-﻿using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging;
 
-namespace Prompt_Manager
+namespace PromptManager
 {
     public static class MauiProgram
     {

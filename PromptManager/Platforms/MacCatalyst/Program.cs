@@ -1,7 +1,7 @@
-﻿using ObjCRuntime;
+using ObjCRuntime;
 using UIKit;
 
-namespace Prompt_Manager
+namespace PromptManager
 {
     public class Program
     {

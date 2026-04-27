@@ -1,7 +1,7 @@
-﻿using Android.App;
+using Android.App;
 using Android.Runtime;
 
-namespace Prompt_Manager
+namespace PromptManager
 {
     [Application]
     public class MainApplication : MauiApplication
