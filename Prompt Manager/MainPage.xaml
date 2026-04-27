@@ -1,0 +1,303 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="Prompt_Manager.MainPage"
+             Title="Prompt Manager"
+             Shell.NavBarIsVisible="False"
+             BackgroundColor="{StaticResource OffBlack}">
+    <Grid>
+        <Grid RowDefinitions="Auto,*"
+              ColumnDefinitions="320,*"
+              Padding="18"
+              ColumnSpacing="18"
+              RowSpacing="14">
+
+        <Grid Grid.ColumnSpan="2"
+              ColumnDefinitions="*,Auto,Auto,Auto,Auto"
+              ColumnSpacing="10">
+            <VerticalStackLayout Spacing="2">
+                <Label Text="Prompt Manager"
+                       FontSize="26"
+                       FontAttributes="Bold"
+                       TextColor="#F2F4F8" />
+            </VerticalStackLayout>
+
+            <Button Grid.Column="1"
+                    Text="Tags"
+                    Clicked="OnTagsClicked" />
+            <Button Grid.Column="2"
+                    x:Name="BrowseModeButton"
+                    Text="All prompts"
+                    Clicked="OnShowAllClicked" />
+            <Button Grid.Column="3"
+                    Text="New folder"
+                    Clicked="OnNewFolderClicked" />
+            <Button Grid.Column="4"
+                    Text="New prompt"
+                    Clicked="OnNewPromptClicked" />
+        </Grid>
+
+        <Border Grid.Row="1"
+                BackgroundColor="#161A1E"
+                Stroke="#2A3036"
+                StrokeShape="RoundRectangle 8">
+            <Grid RowDefinitions="Auto,*"
+                  Padding="12"
+                  RowSpacing="10">
+                <SearchBar x:Name="SearchInput"
+                           Placeholder="Search prompts"
+                           TextChanged="OnSearchTextChanged"
+                           BackgroundColor="#20252B"
+                           TextColor="#F2F4F8"
+                           PlaceholderColor="#7C8794" />
+
+                <CollectionView x:Name="TreeList"
+                                Grid.Row="1"
+                                SelectionMode="None">
+                    <CollectionView.EmptyView>
+                        <Label Text="No prompts yet."
+                               TextColor="#7C8794"
+                               HorizontalOptions="Center"
+                               VerticalOptions="Center" />
+                    </CollectionView.EmptyView>
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate>
+                            <Grid Margin="{Binding RowMargin}"
+                                  Padding="8"
+                                  ColumnDefinitions="28,*,Auto"
+                                  RowDefinitions="Auto,Auto"
+                                  BackgroundColor="#161A1E">
+                                <Grid.GestureRecognizers>
+                                    <TapGestureRecognizer Tapped="OnTreeNodeTapped" />
+                                </Grid.GestureRecognizers>
+                                <Label Text="{Binding Icon}"
+                                       Grid.RowSpan="2"
+                                       TextColor="#9CA3AF"
+                                       FontSize="16"
+                                       HorizontalTextAlignment="Center"
+                                       HorizontalOptions="Center"
+                                       VerticalOptions="Center"
+                                       VerticalTextAlignment="Center" />
+                                <Label Grid.Column="1"
+                                       Text="{Binding Name}"
+                                       TextColor="#F2F4F8"
+                                       FontAttributes="Bold"
+                                       LineBreakMode="TailTruncation" />
+                                <Button Grid.Column="2"
+                                        Grid.RowSpan="2"
+                                        Text="Copy"
+                                        FontSize="12"
+                                        Padding="10,4"
+                                        MinimumHeightRequest="30"
+                                        VerticalOptions="Center"
+                                        IsVisible="{Binding IsPrompt}"
+                                        Clicked="OnCopyFromListClicked" />
+                                <Label Grid.Row="1"
+                                       Grid.Column="1"
+                                       Grid.ColumnSpan="2"
+                                       Text="{Binding Description}"
+                                       TextColor="#7C8794"
+                                       FontSize="12"
+                                       LineBreakMode="TailTruncation" />
+                            </Grid>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+            </Grid>
+        </Border>
+
+        <Grid Grid.Row="1"
+              Grid.Column="1"
+              RowDefinitions="Auto,*"
+              RowSpacing="14">
+
+            <Border BackgroundColor="#161A1E"
+                    Stroke="#2A3036"
+                    StrokeShape="RoundRectangle 8">
+                <Grid Padding="12"
+                      ColumnDefinitions="*,Auto,Auto"
+                      ColumnSpacing="10">
+                    <Label x:Name="CurrentModeLabel"
+                           Text="New prompt"
+                           TextColor="#F2F4F8"
+                           FontSize="18"
+                           FontAttributes="Bold"
+                           VerticalTextAlignment="Center" />
+                    <Button Grid.Column="1"
+                            x:Name="CopyPromptButton"
+                            Text="Copy prompt"
+                            Clicked="OnCopyPromptClicked" />
+                    <Button Grid.Column="2"
+                            x:Name="DeleteButton"
+                            Text="Delete"
+                            BackgroundColor="{StaticResource Secondary}"
+                            TextColor="#FFFFFF"
+                            Clicked="OnDeleteClicked" />
+                </Grid>
+            </Border>
+
+            <ScrollView Grid.Row="1">
+                <VerticalStackLayout Spacing="14">
+                    <Border x:Name="PromptEditor"
+                            BackgroundColor="#161A1E"
+                            Stroke="#2A3036"
+                            StrokeShape="RoundRectangle 8">
+                        <Grid Padding="14"
+                              RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto"
+                              RowSpacing="10">
+                            <Label Text="Name"
+                                   TextColor="#CBD5E1" />
+                            <Entry x:Name="PromptNameInput"
+                                   Grid.Row="1"
+                                   Placeholder="Prompt name"
+                                   BackgroundColor="#20252B"
+                                   TextColor="#F2F4F8"
+                                   PlaceholderColor="#7C8794" />
+
+                            <Label Grid.Row="2"
+                                   Text="Description"
+                                   TextColor="#CBD5E1" />
+                            <Editor x:Name="PromptDescriptionInput"
+                                    Grid.Row="3"
+                                    AutoSize="TextChanges"
+                                    HeightRequest="72"
+                                    Placeholder="Short description"
+                                    BackgroundColor="#20252B"
+                                    TextColor="#F2F4F8"
+                                    PlaceholderColor="#7C8794" />
+
+                            <Grid Grid.Row="4"
+                                  ColumnDefinitions="*,*"
+                                  ColumnSpacing="10">
+                                <VerticalStackLayout Spacing="6">
+                                    <Label Text="Tags"
+                                           TextColor="#CBD5E1" />
+                                    <FlexLayout x:Name="PromptTagsChips"
+                                                Wrap="Wrap"
+                                                AlignItems="Center"
+                                                Direction="Row" />
+                                </VerticalStackLayout>
+                                <VerticalStackLayout Grid.Column="1"
+                                                     Spacing="6">
+                                    <Label Text="Folder"
+                                           TextColor="#CBD5E1" />
+                                    <Picker x:Name="PromptFolderPicker"
+                                            BackgroundColor="#20252B"
+                                            TextColor="#F2F4F8"
+                                            TitleColor="#7C8794"
+                                            ItemDisplayBinding="{Binding Name}" />
+                                </VerticalStackLayout>
+                            </Grid>
+
+                            <VerticalStackLayout Grid.Row="5"
+                                                 Spacing="6">
+                                <Label Text="Prompt"
+                                       TextColor="#CBD5E1" />
+                                <Editor x:Name="PromptContentInput"
+                                        AutoSize="Disabled"
+                                        HeightRequest="260"
+                                        Placeholder="Write the prompt text here..."
+                                        BackgroundColor="#20252B"
+                                        TextColor="#F2F4F8"
+                                        PlaceholderColor="#7C8794" />
+                            </VerticalStackLayout>
+                        </Grid>
+                    </Border>
+
+                    <Border x:Name="FolderEditor"
+                            BackgroundColor="#161A1E"
+                            Stroke="#2A3036"
+                            StrokeShape="RoundRectangle 8"
+                            IsVisible="False">
+                        <Grid Padding="14"
+                              RowDefinitions="Auto,Auto,Auto,Auto,Auto"
+                              RowSpacing="10">
+                            <Label Text="Folder name"
+                                   TextColor="#CBD5E1" />
+                            <Entry x:Name="FolderNameInput"
+                                   Grid.Row="1"
+                                   Placeholder="Folder name"
+                                   BackgroundColor="#20252B"
+                                   TextColor="#F2F4F8"
+                                   PlaceholderColor="#7C8794" />
+
+                            <Label Grid.Row="2"
+                                   Text="Description"
+                                   TextColor="#CBD5E1" />
+                            <Editor x:Name="FolderDescriptionInput"
+                                    Grid.Row="3"
+                                    AutoSize="TextChanges"
+                                    HeightRequest="90"
+                                    Placeholder="What belongs in this folder?"
+                                    BackgroundColor="#20252B"
+                                    TextColor="#F2F4F8"
+                                    PlaceholderColor="#7C8794" />
+
+                            <VerticalStackLayout Grid.Row="4"
+                                                 Spacing="6">
+                                <Label Text="Parent folder"
+                                       TextColor="#CBD5E1" />
+                                <Picker x:Name="ParentFolderPicker"
+                                        Title="No parent folder"
+                                        BackgroundColor="#20252B"
+                                        TextColor="#F2F4F8"
+                                        TitleColor="#7C8794"
+                                        ItemDisplayBinding="{Binding Name}" />
+                            </VerticalStackLayout>
+                        </Grid>
+                    </Border>
+
+                    <Button Text="Save"
+                            FontAttributes="Bold"
+                            Clicked="OnSaveClicked" />
+                </VerticalStackLayout>
+            </ScrollView>
+        </Grid>
+        </Grid>
+
+        <Grid x:Name="TagsDialogOverlay"
+              IsVisible="False"
+              BackgroundColor="#99000000">
+            <Border WidthRequest="420"
+                    HorizontalOptions="Center"
+                    VerticalOptions="Center"
+                    BackgroundColor="#161A1E"
+                    Stroke="#2A3036"
+                    StrokeShape="RoundRectangle 8">
+                <Grid Padding="16"
+                      RowDefinitions="Auto,Auto,*,Auto"
+                      RowSpacing="12">
+                    <Label Text="Tags"
+                           TextColor="#F2F4F8"
+                           FontSize="18"
+                           FontAttributes="Bold" />
+
+                    <Grid Grid.Row="1"
+                          ColumnDefinitions="*,Auto"
+                          ColumnSpacing="10">
+                        <Entry x:Name="TagNameInput"
+                               Placeholder="New tag"
+                               BackgroundColor="#20252B"
+                               TextColor="#F2F4F8"
+                               PlaceholderColor="#7C8794"
+                               Completed="OnAddTagClicked" />
+                        <Button Grid.Column="1"
+                                Text="Add"
+                                Clicked="OnAddTagClicked" />
+                    </Grid>
+
+                    <ScrollView Grid.Row="2"
+                                MaximumHeightRequest="280">
+                        <VerticalStackLayout x:Name="TagsDialogList"
+                                             Spacing="8" />
+                    </ScrollView>
+
+                    <Button Grid.Row="3"
+                            Text="Close"
+                            HorizontalOptions="End"
+                            Clicked="OnCloseTagsClicked" />
+                </Grid>
+            </Border>
+        </Grid>
+    </Grid>
+</ContentPage>
