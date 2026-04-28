@@ -7,7 +7,8 @@ namespace PromptManager
 
     public partial class MainPage : ContentPage
     {
-        private PromptRepository? repository;
+        private IPromptRepository? repository;
+        private readonly PromptTreeService treeService = new();
         private readonly ObservableCollection<PromptTreeNode> treeNodes = [];
         private readonly List<int> expandedFolderIds = [];
         private readonly HashSet<string> selectedPromptTags = new(StringComparer.OrdinalIgnoreCase);
@@ -101,7 +102,7 @@ namespace PromptManager
         private void RefreshFolderPickers()
         {
             var choices = new List<FolderChoice> { new(null, "No folder") };
-            choices.AddRange(folders.Select(folder => new FolderChoice(folder.Id, BuildFolderPath(folder))));
+            choices.AddRange(folders.Select(folder => new FolderChoice(folder.Id, treeService.BuildFolderPath(folder, folders))));
 
             PromptFolderPicker.ItemsSource = choices;
             ParentFolderPicker.ItemsSource = choices;
@@ -109,86 +110,11 @@ namespace PromptManager
 
         private void RefreshTree()
         {
-            var search = SearchInput.Text?.Trim();
             treeNodes.Clear();
-
-            if (showAllPrompts || !string.IsNullOrWhiteSpace(search))
+            foreach (var node in treeService.BuildTree(folders, prompts, expandedFolderIds, showAllPrompts, SearchInput.Text))
             {
-                foreach (var prompt in FilterPrompts(prompts, search))
-                {
-                    treeNodes.Add(new PromptTreeNode
-                    {
-                        Key = $"prompt:{prompt.Id}",
-                        Prompt = prompt,
-                        Depth = 0
-                    });
-                }
-
-                return;
+                treeNodes.Add(node);
             }
-
-            foreach (var folder in folders.Where(folder => folder.ParentFolderId is null).OrderBy(folder => folder.Name ?? string.Empty))
-            {
-                AddFolderNode(folder, 0);
-            }
-
-            foreach (var prompt in prompts.Where(prompt => prompt.FolderId is null).OrderBy(prompt => prompt.Name ?? string.Empty))
-            {
-                treeNodes.Add(new PromptTreeNode
-                {
-                    Key = $"prompt:{prompt.Id}",
-                    Prompt = prompt,
-                    Depth = 0
-                });
-            }
-        }
-
-        private void AddFolderNode(PromptFolder folder, int depth)
-        {
-            var expanded = expandedFolderIds.Contains(folder.Id);
-            treeNodes.Add(new PromptTreeNode
-            {
-                Key = $"folder:{folder.Id}",
-                Folder = folder,
-                Depth = depth,
-                IsExpanded = expanded
-            });
-
-            if (!expanded)
-            {
-                return;
-            }
-
-            foreach (var child in folders.Where(candidate => candidate.ParentFolderId == folder.Id).OrderBy(candidate => candidate.Name ?? string.Empty))
-            {
-                AddFolderNode(child, depth + 1);
-            }
-
-            foreach (var prompt in prompts.Where(prompt => prompt.FolderId == folder.Id).OrderBy(prompt => prompt.Name ?? string.Empty))
-            {
-                treeNodes.Add(new PromptTreeNode
-                {
-                    Key = $"prompt:{prompt.Id}",
-                    Prompt = prompt,
-                    Depth = depth + 1
-                });
-            }
-        }
-
-        private static IEnumerable<PromptItem> FilterPrompts(IEnumerable<PromptItem> source, string? search)
-        {
-            if (string.IsNullOrWhiteSpace(search))
-            {
-                return source.OrderBy(prompt => prompt.Name ?? string.Empty);
-            }
-
-            return source
-                .Where(prompt =>
-                    (prompt.Name ?? string.Empty).Contains(search, StringComparison.OrdinalIgnoreCase) ||
-                    (prompt.Description ?? string.Empty).Contains(search, StringComparison.OrdinalIgnoreCase) ||
-                    (prompt.Content ?? string.Empty).Contains(search, StringComparison.OrdinalIgnoreCase) ||
-                    (prompt.Tags ?? []).Any(tag => tag.Contains(search, StringComparison.OrdinalIgnoreCase)))
-                .OrderBy(prompt => prompt.Name ?? string.Empty);
         }
 
         private async void OnTreeNodeTapped(object? sender, TappedEventArgs e)
@@ -241,42 +167,9 @@ namespace PromptManager
             treeNodes[index] = CloneNode(node, isExpanded: true);
 
             var insertIndex = index + 1;
-            foreach (var child in BuildChildNodes(node.Folder, node.Depth + 1))
+            foreach (var child in treeService.BuildChildNodes(node.Folder, folders, prompts, expandedFolderIds, node.Depth + 1))
             {
                 treeNodes.Insert(insertIndex++, child);
-            }
-        }
-
-        private IEnumerable<PromptTreeNode> BuildChildNodes(PromptFolder folder, int depth)
-        {
-            foreach (var child in folders.Where(candidate => candidate.ParentFolderId == folder.Id).OrderBy(candidate => candidate.Name ?? string.Empty))
-            {
-                var expanded = expandedFolderIds.Contains(child.Id);
-                yield return new PromptTreeNode
-                {
-                    Key = $"folder:{child.Id}",
-                    Folder = child,
-                    Depth = depth,
-                    IsExpanded = expanded
-                };
-
-                if (expanded)
-                {
-                    foreach (var descendant in BuildChildNodes(child, depth + 1))
-                    {
-                        yield return descendant;
-                    }
-                }
-            }
-
-            foreach (var prompt in prompts.Where(prompt => prompt.FolderId == folder.Id).OrderBy(prompt => prompt.Name ?? string.Empty))
-            {
-                yield return new PromptTreeNode
-                {
-                    Key = $"prompt:{prompt.Id}",
-                    Prompt = prompt,
-                    Depth = depth
-                };
             }
         }
 
@@ -631,7 +524,7 @@ namespace PromptManager
             selectedFolder.ParentFolderId = (ParentFolderPicker.SelectedItem as FolderChoice)?.Id;
 
             if (selectedFolder.ParentFolderId == selectedFolder.Id ||
-                (selectedFolder.Id > 0 && selectedFolder.ParentFolderId is int parentId && IsDescendantFolder(parentId, selectedFolder.Id)))
+                (selectedFolder.Id > 0 && selectedFolder.ParentFolderId is int parentId && treeService.IsDescendantFolder(parentId, selectedFolder.Id, folders)))
             {
                 await DisplayAlertAsync("Invalid folder", "A folder cannot be moved inside itself or one of its child folders.", "OK");
                 return;
@@ -716,48 +609,6 @@ namespace PromptManager
             {
                 await Clipboard.Default.SetTextAsync(node.Prompt.Content);
             }
-        }
-
-        private string BuildFolderPath(PromptFolder folder)
-        {
-            var names = new Stack<string>();
-            var current = folder;
-
-            while (true)
-            {
-                names.Push(string.IsNullOrWhiteSpace(current.Name) ? "Untitled folder" : current.Name);
-                if (current.ParentFolderId is not int parentId)
-                {
-                    break;
-                }
-
-                var parent = folders.FirstOrDefault(candidate => candidate.Id == parentId);
-                if (parent is null)
-                {
-                    break;
-                }
-
-                current = parent;
-            }
-
-            return string.Join(" / ", names);
-        }
-
-        private bool IsDescendantFolder(int candidateFolderId, int parentFolderId)
-        {
-            var current = folders.FirstOrDefault(folder => folder.Id == candidateFolderId);
-
-            while (current?.ParentFolderId is int nextParentId)
-            {
-                if (nextParentId == parentFolderId)
-                {
-                    return true;
-                }
-
-                current = folders.FirstOrDefault(folder => folder.Id == nextParentId);
-            }
-
-            return false;
         }
 
         private static void SelectFolder(Picker picker, int? folderId)

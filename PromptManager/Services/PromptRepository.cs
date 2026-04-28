@@ -4,7 +4,7 @@ using PromptManager.Models;
 namespace PromptManager.Services
 {
 
-    public sealed class PromptRepository : IDisposable
+    public sealed class PromptRepository : IPromptRepository
     {
         private LiteDatabase database = null!;
         private ILiteCollection<PromptItem> prompts = null!;
@@ -17,6 +17,16 @@ namespace PromptManager.Services
             Directory.CreateDirectory(Path.GetDirectoryName(databasePath)!);
 
             Initialize(databasePath);
+        }
+
+        internal PromptRepository(
+            ILiteCollection<PromptItem> prompts,
+            ILiteCollection<PromptFolder> folders,
+            ILiteCollection<PromptTagOption> tagOptions)
+        {
+            this.prompts = prompts;
+            this.folders = folders;
+            this.tagOptions = tagOptions;
         }
 
         private void Initialize(string path)
@@ -183,6 +193,6 @@ namespace PromptManager.Services
             return ids;
         }
 
-        public void Dispose() => database.Dispose();
+        public void Dispose() => database?.Dispose();
     }
 }
