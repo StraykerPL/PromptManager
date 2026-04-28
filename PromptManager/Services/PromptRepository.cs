@@ -10,6 +10,7 @@ namespace PromptManager.Services
         private ILiteCollection<PromptItem> prompts = null!;
         private ILiteCollection<PromptFolder> folders = null!;
         private ILiteCollection<PromptTagOption> tagOptions = null!;
+        private ILiteCollection<PromptModelOption> modelOptions = null!;
 
         public PromptRepository()
         {
@@ -22,11 +23,13 @@ namespace PromptManager.Services
         internal PromptRepository(
             ILiteCollection<PromptItem> prompts,
             ILiteCollection<PromptFolder> folders,
-            ILiteCollection<PromptTagOption> tagOptions)
+            ILiteCollection<PromptTagOption> tagOptions,
+            ILiteCollection<PromptModelOption> modelOptions)
         {
             this.prompts = prompts;
             this.folders = folders;
             this.tagOptions = tagOptions;
+            this.modelOptions = modelOptions;
         }
 
         private void Initialize(string path)
@@ -49,12 +52,15 @@ namespace PromptManager.Services
             prompts = database.GetCollection<PromptItem>("prompts");
             folders = database.GetCollection<PromptFolder>("folders");
             tagOptions = database.GetCollection<PromptTagOption>("tagOptions");
+            modelOptions = database.GetCollection<PromptModelOption>("modelOptions");
 
             prompts.EnsureIndex(prompt => prompt.Name);
             prompts.EnsureIndex(prompt => prompt.FolderId);
+            prompts.EnsureIndex(prompt => prompt.AiModel);
             folders.EnsureIndex(folder => folder.Name);
             folders.EnsureIndex(folder => folder.ParentFolderId);
             tagOptions.EnsureIndex(tag => tag.Name, unique: true);
+            modelOptions.EnsureIndex(model => model.Name, unique: true);
         }
 
         private static string CreateBackupPath(string path)
@@ -84,12 +90,10 @@ namespace PromptManager.Services
                 .ToList();
 
         public IReadOnlyList<string> GetAvailableTags() =>
-            tagOptions.FindAll()
-                .Select(tag => tag.Name?.Trim() ?? string.Empty)
-                .Where(name => !string.IsNullOrWhiteSpace(name))
-                .Distinct(StringComparer.OrdinalIgnoreCase)
-                .Order(StringComparer.OrdinalIgnoreCase)
-                .ToList();
+            NormalizeNames(tagOptions.FindAll().Select(tag => tag.Name)).ToList();
+
+        public IReadOnlyList<string> GetAvailableModels() =>
+            NormalizeNames(modelOptions.FindAll().Select(model => model.Name)).ToList();
 
         public void SaveAvailableTags(IEnumerable<string> tags)
         {
@@ -98,6 +102,16 @@ namespace PromptManager.Services
             foreach (var tag in NormalizeTags(tags))
             {
                 tagOptions.Insert(new PromptTagOption { Name = tag });
+            }
+        }
+
+        public void SaveAvailableModels(IEnumerable<string> models)
+        {
+            modelOptions.DeleteAll();
+
+            foreach (var model in NormalizeNames(models))
+            {
+                modelOptions.Insert(new PromptModelOption { Name = model });
             }
         }
 
@@ -136,6 +150,8 @@ namespace PromptManager.Services
             prompt.Name ??= string.Empty;
             prompt.Description ??= string.Empty;
             prompt.Content ??= string.Empty;
+            prompt.AiModel = prompt.AiModel?.Trim() ?? string.Empty;
+            prompt.Quality = Math.Clamp(prompt.Quality, 1, 10);
             prompt.Tags = NormalizeTags(prompt.Tags).ToList();
             return prompt;
         }
@@ -151,6 +167,13 @@ namespace PromptManager.Services
             (tags ?? [])
                 .Select(tag => tag.Trim())
                 .Where(tag => !string.IsNullOrWhiteSpace(tag))
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .Order(StringComparer.OrdinalIgnoreCase);
+
+        private static IEnumerable<string> NormalizeNames(IEnumerable<string?> names) =>
+            names
+                .Select(name => name?.Trim() ?? string.Empty)
+                .Where(name => !string.IsNullOrWhiteSpace(name))
                 .Distinct(StringComparer.OrdinalIgnoreCase)
                 .Order(StringComparer.OrdinalIgnoreCase);
 

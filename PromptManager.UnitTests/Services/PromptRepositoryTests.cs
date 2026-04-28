@@ -69,6 +69,26 @@ namespace PromptManager.UnitTests.Services
         }
 
         [Fact]
+        public void GetAvailableModels_NormalizesDistinctModelsAndOrdersByName()
+        {
+            // Arrange
+            var modelCollection = new Mock<ILiteCollection<PromptModelOption>>();
+            modelCollection.Setup(collection => collection.FindAll()).Returns([
+                new PromptModelOption { Name = " gpt-5 " },
+                new PromptModelOption { Name = "Claude Sonnet" },
+                new PromptModelOption { Name = "GPT-5" },
+                new PromptModelOption { Name = " " }
+            ]);
+            var repository = CreateRepository(modelOptions: modelCollection);
+
+            // Act
+            var result = repository.GetAvailableModels();
+
+            // Assert
+            Assert.Equal(["Claude Sonnet", "gpt-5"], result);
+        }
+
+        [Fact]
         public void SaveAvailableTags_ReplacesStoredTagsWithNormalizedTags()
         {
             // Arrange
@@ -89,6 +109,26 @@ namespace PromptManager.UnitTests.Services
         }
 
         [Fact]
+        public void SaveAvailableModels_ReplacesStoredModelsWithNormalizedModels()
+        {
+            // Arrange
+            var insertedModels = new List<string>();
+            var modelCollection = new Mock<ILiteCollection<PromptModelOption>>();
+            modelCollection
+                .Setup(collection => collection.Insert(It.IsAny<PromptModelOption>()))
+                .Callback<PromptModelOption>(model => insertedModels.Add(model.Name))
+                .Returns(new BsonValue(1));
+            var repository = CreateRepository(modelOptions: modelCollection);
+
+            // Act
+            repository.SaveAvailableModels([" gpt-5 ", "Claude Sonnet", "GPT-5", " "]);
+
+            // Assert
+            modelCollection.Verify(collection => collection.DeleteAll(), Times.Once);
+            Assert.Equal(["Claude Sonnet", "gpt-5"], insertedModels);
+        }
+
+        [Fact]
         public void SavePrompt_WhenNew_NormalizesAndInsertsPrompt()
         {
             // Arrange
@@ -98,6 +138,8 @@ namespace PromptManager.UnitTests.Services
                 Name = null!,
                 Description = null!,
                 Content = null!,
+                Quality = 20,
+                AiModel = " gpt-5 ",
                 Tags = [" beta ", "Alpha", "alpha"]
             };
             var promptCollection = new Mock<ILiteCollection<PromptItem>>();
@@ -116,6 +158,8 @@ namespace PromptManager.UnitTests.Services
             Assert.Equal(string.Empty, prompt.Name);
             Assert.Equal(string.Empty, prompt.Description);
             Assert.Equal(string.Empty, prompt.Content);
+            Assert.Equal(10, prompt.Quality);
+            Assert.Equal("gpt-5", prompt.AiModel);
             Assert.Equal(["Alpha", "beta"], prompt.Tags);
             Assert.True(prompt.CreatedAt <= prompt.UpdatedAt);
             promptCollection.Verify(collection => collection.Update(It.IsAny<PromptItem>()), Times.Never);
@@ -251,10 +295,12 @@ namespace PromptManager.UnitTests.Services
         private static PromptRepository CreateRepository(
             Mock<ILiteCollection<PromptItem>>? prompts = null,
             Mock<ILiteCollection<PromptFolder>>? folders = null,
-            Mock<ILiteCollection<PromptTagOption>>? tagOptions = null) =>
+            Mock<ILiteCollection<PromptTagOption>>? tagOptions = null,
+            Mock<ILiteCollection<PromptModelOption>>? modelOptions = null) =>
             new(
                 prompts?.Object ?? new Mock<ILiteCollection<PromptItem>>().Object,
                 folders?.Object ?? new Mock<ILiteCollection<PromptFolder>>().Object,
-                tagOptions?.Object ?? new Mock<ILiteCollection<PromptTagOption>>().Object);
+                tagOptions?.Object ?? new Mock<ILiteCollection<PromptTagOption>>().Object,
+                modelOptions?.Object ?? new Mock<ILiteCollection<PromptModelOption>>().Object);
     }
 }

@@ -15,6 +15,7 @@ namespace PromptManager
         private List<PromptFolder> folders = [];
         private List<PromptItem> prompts = [];
         private List<string> availableTags = [];
+        private List<string> availableModels = [];
         private PromptItem? selectedPrompt;
         private PromptFolder? selectedFolder;
         private bool editingFolder;
@@ -54,7 +55,9 @@ namespace PromptManager
                 folders = [];
                 prompts = [];
                 availableTags = [];
+                availableModels = [];
                 RefreshFolderPickers();
+                RefreshModelPicker();
                 RenderPromptTagChips();
                 RefreshTree();
                 return;
@@ -63,7 +66,9 @@ namespace PromptManager
             folders = repository.GetFolders().ToList();
             prompts = repository.GetPrompts().ToList();
             availableTags = repository.GetAvailableTags().ToList();
+            availableModels = repository.GetAvailableModels().ToList();
             RefreshFolderPickers();
+            RefreshModelPicker();
             RenderPromptTagChips();
             RefreshTree();
         }
@@ -106,6 +111,13 @@ namespace PromptManager
 
             PromptFolderPicker.ItemsSource = choices;
             ParentFolderPicker.ItemsSource = choices;
+        }
+
+        private void RefreshModelPicker()
+        {
+            var choices = new List<ModelChoice> { new(null, "No model") };
+            choices.AddRange(availableModels.Select(model => new ModelChoice(model, model)));
+            PromptModelPicker.ItemsSource = choices;
         }
 
         private void RefreshTree()
@@ -275,6 +287,68 @@ namespace PromptManager
             repository!.SaveAvailableTags(availableTags);
         }
 
+        private async void OnModelsClicked(object? sender, EventArgs e)
+        {
+            if (!await EnsureRepositoryAvailable())
+            {
+                return;
+            }
+
+            ModelNameInput.Text = string.Empty;
+            RenderModelsDialog();
+            ModelsDialogOverlay.IsVisible = true;
+            ModelNameInput.Focus();
+        }
+
+        private async void OnAddModelClicked(object? sender, EventArgs e)
+        {
+            var model = ModelNameInput.Text?.Trim();
+            if (string.IsNullOrWhiteSpace(model))
+            {
+                return;
+            }
+
+            if (!availableModels.Contains(model, StringComparer.OrdinalIgnoreCase))
+            {
+                availableModels.Add(model);
+                SortAvailableModels();
+                await SaveAvailableModels();
+                RefreshModelPicker();
+            }
+
+            ModelNameInput.Text = string.Empty;
+            RenderModelsDialog();
+        }
+
+        private async void OnRemoveModelClicked(object? sender, EventArgs e)
+        {
+            if ((sender as Button)?.ClassId is not string model)
+            {
+                return;
+            }
+
+            availableModels.RemoveAll(candidate => string.Equals(candidate, model, StringComparison.OrdinalIgnoreCase));
+
+            await SaveAvailableModels();
+            RefreshModelPicker();
+            RenderModelsDialog();
+        }
+
+        private void OnCloseModelsClicked(object? sender, EventArgs e)
+        {
+            ModelsDialogOverlay.IsVisible = false;
+        }
+
+        private async Task SaveAvailableModels()
+        {
+            if (!await EnsureRepositoryAvailable())
+            {
+                return;
+            }
+
+            repository!.SaveAvailableModels(availableModels);
+        }
+
         private void RenderTagsDialog()
         {
             TagsDialogList.Children.Clear();
@@ -314,6 +388,48 @@ namespace PromptManager
 
                 row.Add(removeButton, 1);
                 TagsDialogList.Children.Add(row);
+            }
+        }
+
+        private void RenderModelsDialog()
+        {
+            ModelsDialogList.Children.Clear();
+
+            foreach (var model in availableModels)
+            {
+                var row = new Grid
+                {
+                    ColumnDefinitions =
+                    {
+                        new ColumnDefinition(GridLength.Star),
+                        new ColumnDefinition(GridLength.Auto)
+                    },
+                    ColumnSpacing = 10,
+                    Padding = new Thickness(10, 6),
+                    BackgroundColor = Color.FromArgb("#20252B")
+                };
+
+                row.Add(new Label
+                {
+                    Text = model,
+                    TextColor = Color.FromArgb("#F2F4F8"),
+                    VerticalTextAlignment = TextAlignment.Center
+                });
+
+                var removeButton = new Button
+                {
+                    Text = "Remove",
+                    ClassId = model,
+                    FontSize = 12,
+                    Padding = new Thickness(10, 4),
+                    MinimumHeightRequest = 30,
+                    BackgroundColor = Color.FromArgb("#FF3333"),
+                    TextColor = Colors.White
+                };
+                removeButton.Clicked += OnRemoveModelClicked;
+
+                row.Add(removeButton, 1);
+                ModelsDialogList.Children.Add(row);
             }
         }
 
@@ -368,6 +484,28 @@ namespace PromptManager
                 .ToList();
         }
 
+        private void SortAvailableModels()
+        {
+            availableModels = availableModels
+                .Select(model => model.Trim())
+                .Where(model => !string.IsNullOrWhiteSpace(model))
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .Order(StringComparer.OrdinalIgnoreCase)
+                .ToList();
+        }
+
+        private void OnPromptQualityChanged(object? sender, ValueChangedEventArgs e)
+        {
+            var quality = (int)Math.Round(e.NewValue);
+            PromptQualitySlider.Value = quality;
+            PromptQualityLabel.Text = quality switch
+            {
+                1 => "Quality: 1/10 - does not work",
+                10 => "Quality: 10/10 - works perfectly",
+                _ => $"Quality: {quality}/10"
+            };
+        }
+
         private void OnNewPromptClicked(object? sender, EventArgs e) => StartNewPrompt();
 
         private void OnNewFolderClicked(object? sender, EventArgs e) => StartNewFolder();
@@ -388,6 +526,8 @@ namespace PromptManager
             PromptDescriptionInput.Text = string.Empty;
             selectedPromptTags.Clear();
             RenderPromptTagChips();
+            SetPromptQuality(5);
+            SelectModel(null);
             PromptContentInput.Text = string.Empty;
             SelectFirstPickerItem(PromptFolderPicker);
         }
@@ -430,6 +570,8 @@ namespace PromptManager
             }
 
             RenderPromptTagChips();
+            SetPromptQuality(selectedPrompt.Quality);
+            SelectModel(selectedPrompt.AiModel);
             PromptContentInput.Text = selectedPrompt.Content;
             SelectFolder(PromptFolderPicker, selectedPrompt.FolderId);
         }
@@ -483,6 +625,8 @@ namespace PromptManager
             selectedPrompt.Tags = selectedPromptTags
                 .Order(StringComparer.OrdinalIgnoreCase)
                 .ToList();
+            selectedPrompt.Quality = (int)Math.Round(PromptQualitySlider.Value);
+            selectedPrompt.AiModel = (PromptModelPicker.SelectedItem as ModelChoice)?.Name ?? string.Empty;
             selectedPrompt.Content = content;
             selectedPrompt.FolderId = (PromptFolderPicker.SelectedItem as FolderChoice)?.Id;
 
@@ -625,6 +769,27 @@ namespace PromptManager
             SelectFirstPickerItem(picker);
         }
 
+        private void SelectModel(string? modelName)
+        {
+            for (var i = 0; i < PromptModelPicker.ItemsSource?.Count; i++)
+            {
+                if (PromptModelPicker.ItemsSource[i] is ModelChoice choice &&
+                    string.Equals(choice.Name, modelName, StringComparison.OrdinalIgnoreCase))
+                {
+                    PromptModelPicker.SelectedIndex = i;
+                    return;
+                }
+            }
+
+            SelectFirstPickerItem(PromptModelPicker);
+        }
+
+        private void SetPromptQuality(int quality)
+        {
+            PromptQualitySlider.Value = Math.Clamp(quality, 1, 10);
+            OnPromptQualityChanged(PromptQualitySlider, new ValueChangedEventArgs(PromptQualitySlider.Value, PromptQualitySlider.Value));
+        }
+
         private static void SelectFirstPickerItem(Picker picker)
         {
             picker.SelectedIndex = picker.ItemsSource?.Count > 0 ? 0 : -1;
@@ -638,6 +803,8 @@ namespace PromptManager
             Description = prompt.Description ?? string.Empty,
             Content = prompt.Content ?? string.Empty,
             Tags = [.. prompt.Tags ?? []],
+            Quality = prompt.Quality,
+            AiModel = prompt.AiModel ?? string.Empty,
             CreatedAt = prompt.CreatedAt,
             UpdatedAt = prompt.UpdatedAt
         };
@@ -653,5 +820,6 @@ namespace PromptManager
         };
 
         public sealed record FolderChoice(int? Id, string Name);
+        public sealed record ModelChoice(string? Name, string DisplayName);
     }
 }

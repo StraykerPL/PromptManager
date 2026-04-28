@@ -13,7 +13,7 @@
               RowSpacing="14">
 
         <Grid Grid.ColumnSpan="2"
-              ColumnDefinitions="*,Auto,Auto,Auto,Auto"
+              ColumnDefinitions="*,Auto,Auto,Auto,Auto,Auto"
               ColumnSpacing="10">
             <VerticalStackLayout Spacing="2">
                 <Label Text="Prompt Manager"
@@ -26,13 +26,16 @@
                     Text="Tags"
                     Clicked="OnTagsClicked" />
             <Button Grid.Column="2"
+                    Text="Models"
+                    Clicked="OnModelsClicked" />
+            <Button Grid.Column="3"
                     x:Name="BrowseModeButton"
                     Text="All prompts"
                     Clicked="OnShowAllClicked" />
-            <Button Grid.Column="3"
+            <Button Grid.Column="4"
                     Text="New folder"
                     Clicked="OnNewFolderClicked" />
-            <Button Grid.Column="4"
+            <Button Grid.Column="5"
                     Text="New prompt"
                     Clicked="OnNewPromptClicked" />
         </Grid>
@@ -95,7 +98,7 @@
                                 <Label Grid.Row="1"
                                        Grid.Column="1"
                                        Grid.ColumnSpan="2"
-                                       Text="{Binding Description}"
+                                       Text="{Binding Details}"
                                        TextColor="#7C8794"
                                        FontSize="12"
                                        LineBreakMode="TailTruncation" />
@@ -143,7 +146,7 @@
                             Stroke="#2A3036"
                             StrokeShape="RoundRectangle 8">
                         <Grid Padding="14"
-                              RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto"
+                              RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto"
                               RowSpacing="10">
                             <Label Text="Name"
                                    TextColor="#CBD5E1" />
@@ -190,6 +193,34 @@
                             </Grid>
 
                             <VerticalStackLayout Grid.Row="5"
+                                                 Spacing="8">
+                                <Grid ColumnDefinitions="*,Auto"
+                                      ColumnSpacing="10">
+                                    <Label x:Name="PromptQualityLabel"
+                                           Text="Quality: 5/10"
+                                           TextColor="#CBD5E1" />
+                                    <Label Grid.Column="1"
+                                           Text="1 does not work | 10 works perfectly"
+                                           TextColor="#7C8794"
+                                           FontSize="12" />
+                                </Grid>
+                                <Slider x:Name="PromptQualitySlider"
+                                        Minimum="1"
+                                        Maximum="10"
+                                        Value="5"
+                                        ValueChanged="OnPromptQualityChanged" />
+                                <VerticalStackLayout Spacing="6">
+                                    <Label Text="AI model"
+                                           TextColor="#CBD5E1" />
+                                    <Picker x:Name="PromptModelPicker"
+                                            BackgroundColor="#20252B"
+                                            TextColor="#F2F4F8"
+                                            TitleColor="#7C8794"
+                                            ItemDisplayBinding="{Binding DisplayName}" />
+                                </VerticalStackLayout>
+                            </VerticalStackLayout>
+
+                            <VerticalStackLayout Grid.Row="6"
                                                  Spacing="6">
                                 <Label Text="Prompt"
                                        TextColor="#CBD5E1" />
@@ -296,6 +327,51 @@
                             Text="Close"
                             HorizontalOptions="End"
                             Clicked="OnCloseTagsClicked" />
+                </Grid>
+            </Border>
+        </Grid>
+
+        <Grid x:Name="ModelsDialogOverlay"
+              IsVisible="False"
+              BackgroundColor="#99000000">
+            <Border WidthRequest="420"
+                    HorizontalOptions="Center"
+                    VerticalOptions="Center"
+                    BackgroundColor="#161A1E"
+                    Stroke="#2A3036"
+                    StrokeShape="RoundRectangle 8">
+                <Grid Padding="16"
+                      RowDefinitions="Auto,Auto,*,Auto"
+                      RowSpacing="12">
+                    <Label Text="AI models"
+                           TextColor="#F2F4F8"
+                           FontSize="18"
+                           FontAttributes="Bold" />
+
+                    <Grid Grid.Row="1"
+                          ColumnDefinitions="*,Auto"
+                          ColumnSpacing="10">
+                        <Entry x:Name="ModelNameInput"
+                               Placeholder="New model"
+                               BackgroundColor="#20252B"
+                               TextColor="#F2F4F8"
+                               PlaceholderColor="#7C8794"
+                               Completed="OnAddModelClicked" />
+                        <Button Grid.Column="1"
+                                Text="Add"
+                                Clicked="OnAddModelClicked" />
+                    </Grid>
+
+                    <ScrollView Grid.Row="2"
+                                MaximumHeightRequest="280">
+                        <VerticalStackLayout x:Name="ModelsDialogList"
+                                             Spacing="8" />
+                    </ScrollView>
+
+                    <Button Grid.Row="3"
+                            Text="Close"
+                            HorizontalOptions="End"
+                            Clicked="OnCloseModelsClicked" />
                 </Grid>
             </Border>
         </Grid>

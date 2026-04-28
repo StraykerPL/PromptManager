@@ -67,6 +67,7 @@ namespace PromptManager.Services
                     (prompt.Name ?? string.Empty).Contains(search, StringComparison.OrdinalIgnoreCase) ||
                     (prompt.Description ?? string.Empty).Contains(search, StringComparison.OrdinalIgnoreCase) ||
                     (prompt.Content ?? string.Empty).Contains(search, StringComparison.OrdinalIgnoreCase) ||
+                    (prompt.AiModel ?? string.Empty).Contains(search, StringComparison.OrdinalIgnoreCase) ||
                     (prompt.Tags ?? []).Any(tag => tag.Contains(search, StringComparison.OrdinalIgnoreCase)))
                 .OrderBy(prompt => prompt.Name ?? string.Empty)
                 .ToList();

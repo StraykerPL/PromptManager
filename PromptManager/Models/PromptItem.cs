@@ -9,6 +9,8 @@ namespace PromptManager.Models
         public string Description { get; set; } = string.Empty;
         public string Content { get; set; } = string.Empty;
         public List<string> Tags { get; set; } = [];
+        public int Quality { get; set; } = 5;
+        public string AiModel { get; set; } = string.Empty;
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 

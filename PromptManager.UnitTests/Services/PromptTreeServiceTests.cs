@@ -8,7 +8,7 @@ namespace PromptManager.UnitTests.Services
         private readonly PromptTreeService service = new();
 
         [Fact]
-        public void FilterPrompts_WithSearch_MatchesNameDescriptionContentAndTags()
+        public void FilterPrompts_WithSearch_MatchesNameDescriptionContentTagsAndAiModel()
         {
             // Arrange
             var prompts = new[]
@@ -16,14 +16,15 @@ namespace PromptManager.UnitTests.Services
                 new PromptItem { Id = 1, Name = "Alpha", Description = "First", Content = "Body", Tags = ["one"] },
                 new PromptItem { Id = 2, Name = "Beta", Description = "Target description", Content = "Body", Tags = ["two"] },
                 new PromptItem { Id = 3, Name = "Gamma", Description = "Third", Content = "Target content", Tags = ["three"] },
-                new PromptItem { Id = 4, Name = "Delta", Description = "Fourth", Content = "Body", Tags = ["target-tag"] }
+                new PromptItem { Id = 4, Name = "Delta", Description = "Fourth", Content = "Body", Tags = ["target-tag"] },
+                new PromptItem { Id = 5, Name = "Epsilon", Description = "Fifth", Content = "Body", AiModel = "Target model" }
             };
 
             // Act
             var result = service.FilterPrompts(prompts, "target");
 
             // Assert
-            Assert.Equal([2, 4, 3], result.Select(prompt => prompt.Id));
+            Assert.Equal([2, 4, 5, 3], result.Select(prompt => prompt.Id));
         }
 
         [Fact]

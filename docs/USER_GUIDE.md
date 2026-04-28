@@ -7,6 +7,7 @@ Prompt Manager is a desktop app for saving, organizing, searching, and copying r
 The top bar contains the main actions:
 
 - **Tags** opens the tag manager.
+- **Models** opens the AI model manager.
 - **All prompts** switches the left list from folder tree mode to a flat list of every prompt.
 - **New folder** opens the folder editor.
 - **New prompt** opens the prompt editor.
@@ -26,15 +27,17 @@ The right panel contains the editor for the currently selected prompt or folder.
 3. Optionally enter a **Description**.
 4. Select any existing tags you want to apply.
 5. Choose a folder from the **Folder** list, or keep **No folder**.
-6. Enter the prompt text in the **Prompt** field.
-7. Select **Save**.
+6. Set the prompt **Quality** from 1 to 10.
+7. Choose the **AI model** used with this prompt, or keep **No model**.
+8. Enter the prompt text in the **Prompt** field.
+9. Select **Save**.
 
 The app requires both a prompt name and prompt text. If either is missing, the prompt will not be saved.
 
 ## Editing a Prompt
 
 1. Select a prompt from the left list.
-2. Update its name, description, tags, folder, or prompt text.
+2. Update its name, description, tags, folder, quality, AI model, or prompt text.
 3. Select **Save**.
 
 When editing an existing prompt, the **Copy prompt** and **Delete** buttons are shown above the editor.
@@ -101,9 +104,19 @@ Use the search field in the left panel to find prompts. Search matches:
 - Prompt name
 - Description
 - Prompt text
+- AI model
 - Tags
 
 Search results are shown as a flat list of prompts. Clearing the search field returns to the normal folder tree.
+
+## Setting Prompt Quality
+
+Each prompt can have a quality score from 1 to 10:
+
+- **1** means the prompt does not work.
+- **10** means the prompt works perfectly.
+
+Use the **Quality** slider in the prompt editor when creating or editing a prompt. The selected value is saved with the prompt, so you can track which prompts are reliable and which ones need improvement.
 
 ## Managing Tags
 
@@ -128,8 +141,31 @@ Tags are cleaned up automatically:
 - Duplicate tags are ignored without matching letter case.
 - Tags are sorted alphabetically.
 
+## Managing AI Models
+
+Select **Models** to open the AI model manager.
+
+To add a model:
+
+1. Type the model name in the **New model** field.
+2. Select **Add**, or press Enter.
+
+To remove a model:
+
+1. Find the model in the model manager.
+2. Select **Remove**.
+
+Models are stored as a shared list. After a model is added, it appears in the **AI model** list in the prompt editor. Select a model there to record which AI or LLM model was used with the prompt.
+
+Model names are cleaned up automatically:
+
+- Extra spaces are removed.
+- Blank model names are ignored.
+- Duplicate model names are ignored without matching letter case.
+- Model names are sorted alphabetically.
+
 ## Storage And Startup
 
-Prompt Manager stores prompts, folders, and tags locally on the device. If the storage file cannot be opened at startup, the app shows a startup error and opens with an empty workspace. Saving or loading data may remain unavailable until storage can be opened again.
+Prompt Manager stores prompts, folders, tags, model names, quality scores, and prompt model selections locally on the device. If the storage file cannot be opened at startup, the app shows a startup error and opens with an empty workspace. Saving or loading data may remain unavailable until storage can be opened again.
 
 If a damaged storage file is detected, the app attempts to move it aside as a backup and create a fresh database.
