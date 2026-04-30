@@ -129,6 +129,114 @@ namespace PromptManager.UnitTests.Services
         }
 
         [Fact]
+        public void ExportData_ReturnsNormalizedPromptsFoldersTagsAndModels()
+        {
+            // Arrange
+            var promptCollection = new Mock<ILiteCollection<PromptItem>>();
+            promptCollection.Setup(collection => collection.FindAll()).Returns([
+                new PromptItem { Id = 1, Name = "Prompt", Description = null!, Content = null!, Tags = [" beta ", "Alpha"] }
+            ]);
+
+            var folderCollection = new Mock<ILiteCollection<PromptFolder>>();
+            folderCollection.Setup(collection => collection.FindAll()).Returns([
+                new PromptFolder { Id = 1, Name = "Folder", Description = null! }
+            ]);
+
+            var tagCollection = new Mock<ILiteCollection<PromptTagOption>>();
+            tagCollection.Setup(collection => collection.FindAll()).Returns([
+                new PromptTagOption { Name = " tag " }
+            ]);
+
+            var modelCollection = new Mock<ILiteCollection<PromptModelOption>>();
+            modelCollection.Setup(collection => collection.FindAll()).Returns([
+                new PromptModelOption { Name = " model " }
+            ]);
+
+            var repository = CreateRepository(promptCollection, folderCollection, tagCollection, modelCollection);
+
+            // Act
+            var result = repository.ExportData();
+
+            // Assert
+            Assert.Single(result.Prompts);
+            Assert.Single(result.Folders);
+            Assert.Equal(["Alpha", "beta"], result.Prompts[0].Tags);
+            Assert.Equal(string.Empty, result.Prompts[0].Description);
+            Assert.Equal(string.Empty, result.Folders[0].Description);
+            Assert.Equal(["tag"], result.Tags);
+            Assert.Equal(["model"], result.Models);
+        }
+
+        [Fact]
+        public void ImportData_ReplacesStoredDataAndNormalizesReferences()
+        {
+            // Arrange
+            var insertedPrompts = new List<PromptItem>();
+            var insertedFolders = new List<PromptFolder>();
+            var insertedTags = new List<string>();
+            var insertedModels = new List<string>();
+
+            var promptCollection = new Mock<ILiteCollection<PromptItem>>();
+            promptCollection
+                .Setup(collection => collection.Insert(It.IsAny<PromptItem>()))
+                .Callback<PromptItem>(prompt => insertedPrompts.Add(prompt))
+                .Returns(new BsonValue(1));
+
+            var folderCollection = new Mock<ILiteCollection<PromptFolder>>();
+            folderCollection
+                .Setup(collection => collection.Insert(It.IsAny<PromptFolder>()))
+                .Callback<PromptFolder>(folder => insertedFolders.Add(folder))
+                .Returns(new BsonValue(1));
+
+            var tagCollection = new Mock<ILiteCollection<PromptTagOption>>();
+            tagCollection
+                .Setup(collection => collection.Insert(It.IsAny<PromptTagOption>()))
+                .Callback<PromptTagOption>(tag => insertedTags.Add(tag.Name))
+                .Returns(new BsonValue(1));
+
+            var modelCollection = new Mock<ILiteCollection<PromptModelOption>>();
+            modelCollection
+                .Setup(collection => collection.Insert(It.IsAny<PromptModelOption>()))
+                .Callback<PromptModelOption>(model => insertedModels.Add(model.Name))
+                .Returns(new BsonValue(1));
+
+            var repository = CreateRepository(promptCollection, folderCollection, tagCollection, modelCollection);
+            var document = new PromptDataDocument
+            {
+                Folders =
+                [
+                    new PromptFolder { Id = 1, Name = "Root" },
+                    new PromptFolder { Id = 2, Name = "Child", ParentFolderId = 1 },
+                    new PromptFolder { Id = 3, Name = "Broken", ParentFolderId = 99 }
+                ],
+                Prompts =
+                [
+                    new PromptItem { Id = 1, Name = "Valid", FolderId = 2, Tags = [" beta ", "Alpha"], Quality = 20 },
+                    new PromptItem { Id = 2, Name = "Missing folder", FolderId = 99 }
+                ],
+                Tags = [" tag ", "TAG"],
+                Models = [" model ", "MODEL"]
+            };
+
+            // Act
+            repository.ImportData(document);
+
+            // Assert
+            promptCollection.Verify(collection => collection.DeleteAll(), Times.Once);
+            folderCollection.Verify(collection => collection.DeleteAll(), Times.Once);
+            tagCollection.Verify(collection => collection.DeleteAll(), Times.Once);
+            modelCollection.Verify(collection => collection.DeleteAll(), Times.Once);
+            Assert.Equal([1, 2, 3], insertedFolders.Select(folder => folder.Id).Order());
+            Assert.Null(insertedFolders.Single(folder => folder.Id == 3).ParentFolderId);
+            Assert.Equal(2, insertedPrompts[0].FolderId);
+            Assert.Equal(10, insertedPrompts[0].Quality);
+            Assert.Equal(["Alpha", "beta"], insertedPrompts[0].Tags);
+            Assert.Null(insertedPrompts[1].FolderId);
+            Assert.Equal(["tag"], insertedTags);
+            Assert.Equal(["model"], insertedModels);
+        }
+
+        [Fact]
         public void SavePrompt_WhenNew_NormalizesAndInsertsPrompt()
         {
             // Arrange

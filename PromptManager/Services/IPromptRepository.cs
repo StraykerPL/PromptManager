@@ -8,6 +8,8 @@ namespace PromptManager.Services
         IReadOnlyList<PromptFolder> GetFolders();
         IReadOnlyList<string> GetAvailableTags();
         IReadOnlyList<string> GetAvailableModels();
+        PromptDataDocument ExportData();
+        void ImportData(PromptDataDocument document);
         void SaveAvailableTags(IEnumerable<string> tags);
         void SaveAvailableModels(IEnumerable<string> models);
         void SavePrompt(PromptItem prompt);

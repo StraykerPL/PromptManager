@@ -2,12 +2,23 @@
 
 Prompt Manager is a desktop app for saving, organizing, searching, and copying reusable prompts. The main screen is split into a prompt list on the left and an editor on the right.
 
+## Quick Start
+
+1. Select **New folder** if you want to organize prompts by topic or project.
+2. Select **New prompt**.
+3. Enter a name and prompt text.
+4. Optionally choose tags, a folder, a quality score, and an AI model.
+5. Select **Save**.
+6. Use **Copy** from the left list whenever you need the prompt text.
+
 ## Main Screen
 
 The top bar contains the main actions:
 
 - **Tags** opens the tag manager.
 - **Models** opens the AI model manager.
+- **Import** loads prompts, folders, tags, and models from a JSON file.
+- **Export** saves prompts, folders, tags, and models to a JSON file.
 - **All prompts** switches the left list from folder tree mode to a flat list of every prompt.
 - **New folder** opens the folder editor.
 - **New prompt** opens the prompt editor.
@@ -164,8 +175,29 @@ Model names are cleaned up automatically:
 - Duplicate model names are ignored without matching letter case.
 - Model names are sorted alphabetically.
 
+## Importing And Exporting Data
+
+Select **Export** to save the current Prompt Manager data to a JSON file. The system save dialog asks where to store the file and only offers the JSON file type.
+
+Select **Import** to load data from a JSON file. The system open dialog is filtered to JSON files. Importing replaces the current local prompts, folders, tags, and AI models, so the app asks for confirmation before loading the file.
+
+Imported data is cleaned up before it is saved:
+
+- Prompt quality is clamped to 1 through 10.
+- Tags and model names are trimmed, deduplicated, and sorted.
+- Prompts that point to missing folders are moved to the root level.
+- Folders that point to missing, invalid, or cyclic parents are moved to the root level.
+
 ## Storage And Startup
 
 Prompt Manager stores prompts, folders, tags, model names, quality scores, and prompt model selections locally on the device. If the storage file cannot be opened at startup, the app shows a startup error and opens with an empty workspace. Saving or loading data may remain unavailable until storage can be opened again.
 
 If a damaged storage file is detected, the app attempts to move it aside as a backup and create a fresh database.
+
+## Current Limitations
+
+Prompt Manager currently does not provide built-in cloud sync, accounts, collaboration, import/export, or encryption settings. Data is local to the device and app data directory.
+
+## Recommended Workflow
+
+Use folders for broad categories such as projects, products, or writing tasks. Use tags for qualities that cross folder boundaries, such as `drafting`, `review`, `coding`, `marketing`, or `needs-work`. Use the quality score to separate proven prompts from experiments.

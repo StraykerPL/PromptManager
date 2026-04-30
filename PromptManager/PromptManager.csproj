@@ -33,6 +33,7 @@
 
 		<!-- Display name -->
 		<ApplicationTitle>Prompt Manager</ApplicationTitle>
+		<ApplicationIcon>Resources\Images\icon.ico</ApplicationIcon>
 
 		<!-- App Identifier -->
 		<ApplicationId>com.companyname.promptmanager</ApplicationId>
@@ -53,13 +54,13 @@
 
 	<ItemGroup>
 		<!-- App Icon -->
-		<MauiIcon Include="Resources\AppIcon\appicon.svg" ForegroundFile="Resources\AppIcon\appiconfg.svg" Color="#0099FF" />
+		<MauiIcon Include="Resources\Images\icon.ico" />
 
 		<!-- Splash Screen -->
 		<MauiSplashScreen Include="Resources\Splash\splash.svg" Color="#0099FF" BaseSize="128,128" />
 
 		<!-- Images -->
-		<MauiImage Include="Resources\Images\*" />
+		<MauiImage Include="Resources\Images\*" Exclude="Resources\Images\icon.ico" />
 		<MauiImage Update="Resources\Images\dotnet_bot.png" Resize="True" BaseSize="300,185" />
 		
 		<!-- Custom Fonts -->

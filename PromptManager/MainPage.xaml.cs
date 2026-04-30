@@ -1,3 +1,4 @@
+using System.Text.Json;
 using System.Collections.ObjectModel;
 using PromptManager.Models;
 using PromptManager.Services;
@@ -20,6 +21,18 @@ namespace PromptManager
         private PromptFolder? selectedFolder;
         private bool editingFolder;
         private bool showAllPrompts;
+        private static readonly JsonSerializerOptions ExportJsonOptions = new()
+        {
+            WriteIndented = true,
+            PropertyNameCaseInsensitive = true
+        };
+        private static readonly FilePickerFileType JsonFileType = new(new Dictionary<DevicePlatform, IEnumerable<string>>
+        {
+            { DevicePlatform.WinUI, [".json"] },
+            { DevicePlatform.macOS, ["public.json"] },
+            { DevicePlatform.iOS, ["public.json"] },
+            { DevicePlatform.Android, ["application/json"] }
+        });
 
         public MainPage()
         {
@@ -129,7 +142,17 @@ namespace PromptManager
             }
         }
 
-        private async void OnTreeNodeTapped(object? sender, TappedEventArgs e)
+        private void OnTreeListLoaded(object? sender, EventArgs e)
+        {
+#if WINDOWS
+            if (TreeList.Handler?.PlatformView is Microsoft.UI.Xaml.Controls.ItemsControl itemsControl)
+            {
+                itemsControl.ItemContainerTransitions = new Microsoft.UI.Xaml.Media.Animation.TransitionCollection();
+            }
+#endif
+        }
+
+        private void OnTreeNodeTapped(object? sender, TappedEventArgs e)
         {
             if ((sender as VisualElement)?.BindingContext is not PromptTreeNode node)
             {
@@ -139,11 +162,6 @@ namespace PromptManager
             if (node.Folder is not null)
             {
                 EditFolder(node.Folder);
-                if (sender is VisualElement row)
-                {
-                    await AnimateFolderToggle(row);
-                }
-
                 ToggleFolderNode(node);
                 return;
             }
@@ -194,12 +212,6 @@ namespace PromptManager
             IsExpanded = isExpanded
         };
 
-        private static async Task AnimateFolderToggle(VisualElement row)
-        {
-            await row.FadeToAsync(0.82, 70, Easing.SinInOut);
-            await row.FadeToAsync(1, 90, Easing.SinInOut);
-        }
-
         private void OnSearchTextChanged(object? sender, TextChangedEventArgs e)
         {
             showAllPrompts = false;
@@ -223,6 +235,112 @@ namespace PromptManager
 
         private void UpdateBrowseModeButton() =>
             BrowseModeButton.Text = showAllPrompts ? "Groups tree" : "All prompts";
+
+        private async void OnImportClicked(object? sender, EventArgs e)
+        {
+            if (!await EnsureRepositoryAvailable())
+            {
+                return;
+            }
+
+            var confirm = await DisplayAlertAsync(
+                "Import data",
+                "Importing a JSON file will replace the current prompts, folders, tags, and models. Continue?",
+                "Import",
+                "Cancel");
+            if (!confirm)
+            {
+                return;
+            }
+
+            try
+            {
+                var file = await FilePicker.Default.PickAsync(new PickOptions
+                {
+                    PickerTitle = "Import Prompt Manager data",
+                    FileTypes = JsonFileType
+                });
+                if (file is null)
+                {
+                    return;
+                }
+
+                await using var stream = await file.OpenReadAsync();
+                var document = await JsonSerializer.DeserializeAsync<PromptDataDocument>(stream, ExportJsonOptions);
+                if (document is null)
+                {
+                    await DisplayAlertAsync("Import failed", "The selected JSON file does not contain Prompt Manager data.", "OK");
+                    return;
+                }
+
+                repository!.ImportData(document);
+                expandedFolderIds.Clear();
+                showAllPrompts = false;
+                SearchInput.Text = string.Empty;
+                LoadData();
+                StartNewPrompt();
+
+                await DisplayAlertAsync("Import complete", "Prompt Manager data was imported.", "OK");
+            }
+            catch (JsonException)
+            {
+                await DisplayAlertAsync("Import failed", "The selected file is not valid Prompt Manager JSON data.", "OK");
+            }
+            catch (Exception ex)
+            {
+                await DisplayAlertAsync("Import failed", ex.Message, "OK");
+            }
+        }
+
+        private async void OnExportClicked(object? sender, EventArgs e)
+        {
+            if (!await EnsureRepositoryAvailable())
+            {
+                return;
+            }
+
+            try
+            {
+                var json = JsonSerializer.Serialize(repository!.ExportData(), ExportJsonOptions);
+                if (await SaveJsonFile(json))
+                {
+                    await DisplayAlertAsync("Export complete", "Prompt Manager data was exported.", "OK");
+                }
+            }
+            catch (Exception ex)
+            {
+                await DisplayAlertAsync("Export failed", ex.Message, "OK");
+            }
+        }
+
+        private async Task<bool> SaveJsonFile(string json)
+        {
+#if WINDOWS
+            var picker = new Windows.Storage.Pickers.FileSavePicker
+            {
+                SuggestedStartLocation = Windows.Storage.Pickers.PickerLocationId.DocumentsLibrary,
+                SuggestedFileName = $"prompt-manager-export-{DateTime.Now:yyyyMMdd-HHmmss}"
+            };
+            picker.FileTypeChoices.Add("JSON file", [".json"]);
+
+            if (Application.Current?.Windows.FirstOrDefault()?.Handler?.PlatformView is Microsoft.UI.Xaml.Window window)
+            {
+                WinRT.Interop.InitializeWithWindow.Initialize(picker, WinRT.Interop.WindowNative.GetWindowHandle(window));
+            }
+
+            var file = await picker.PickSaveFileAsync();
+            if (file is null)
+            {
+                return false;
+            }
+
+            await Windows.Storage.FileIO.WriteTextAsync(file, json);
+            return true;
+#else
+            await DisplayAlertAsync("Export unavailable", "Choosing an export location is currently implemented for Windows only.", "OK");
+            return false;
+#endif
+        }
 
         private async void OnTagsClicked(object? sender, EventArgs e)
         {

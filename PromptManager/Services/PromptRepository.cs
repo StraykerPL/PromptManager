@@ -95,6 +95,54 @@ namespace PromptManager.Services
         public IReadOnlyList<string> GetAvailableModels() =>
             NormalizeNames(modelOptions.FindAll().Select(model => model.Name)).ToList();
 
+        public PromptDataDocument ExportData() => new()
+        {
+            Folders = GetFolders().Select(CloneFolder).ToList(),
+            Prompts = GetPrompts().Select(ClonePrompt).ToList(),
+            Tags = GetAvailableTags().ToList(),
+            Models = GetAvailableModels().ToList()
+        };
+
+        public void ImportData(PromptDataDocument document)
+        {
+            var importedFolders = NormalizeImportedFolders(document.Folders);
+            var importedFolderIds = importedFolders.Select(folder => folder.Id).ToHashSet();
+            var importedPrompts = (document.Prompts ?? [])
+                .Select(ClonePrompt)
+                .Select(NormalizePrompt)
+                .ToList();
+
+            foreach (var prompt in importedPrompts.Where(prompt => prompt.FolderId is int folderId && !importedFolderIds.Contains(folderId)))
+            {
+                prompt.FolderId = null;
+            }
+
+            prompts.DeleteAll();
+            folders.DeleteAll();
+            tagOptions.DeleteAll();
+            modelOptions.DeleteAll();
+
+            foreach (var folder in importedFolders)
+            {
+                folders.Insert(folder);
+            }
+
+            foreach (var prompt in importedPrompts)
+            {
+                prompts.Insert(prompt);
+            }
+
+            foreach (var tag in NormalizeTags(document.Tags))
+            {
+                tagOptions.Insert(new PromptTagOption { Name = tag });
+            }
+
+            foreach (var model in NormalizeNames(document.Models ?? []))
+            {
+                modelOptions.Insert(new PromptModelOption { Name = model });
+            }
+        }
+
         public void SaveAvailableTags(IEnumerable<string> tags)
         {
             tagOptions.DeleteAll();
@@ -176,6 +224,74 @@ namespace PromptManager.Services
                 .Where(name => !string.IsNullOrWhiteSpace(name))
                 .Distinct(StringComparer.OrdinalIgnoreCase)
                 .Order(StringComparer.OrdinalIgnoreCase);
+
+        private static List<PromptFolder> NormalizeImportedFolders(IEnumerable<PromptFolder>? source)
+        {
+            var folders = (source ?? [])
+                .Select(CloneFolder)
+                .Where(folder => folder.Id > 0)
+                .Select(NormalizeFolder)
+                .GroupBy(folder => folder.Id)
+                .Select(group => group.First())
+                .OrderBy(folder => folder.Name)
+                .ToList();
+            var folderIds = folders.Select(folder => folder.Id).ToHashSet();
+
+            foreach (var folder in folders.Where(folder => folder.ParentFolderId is int parentId && (parentId == folder.Id || !folderIds.Contains(parentId))))
+            {
+                folder.ParentFolderId = null;
+            }
+
+            var changed = true;
+            while (changed)
+            {
+                changed = false;
+
+                foreach (var folder in folders.Where(folder => folder.ParentFolderId is not null))
+                {
+                    var seenIds = new HashSet<int> { folder.Id };
+                    var parentId = folder.ParentFolderId;
+
+                    while (parentId is int currentParentId)
+                    {
+                        if (!seenIds.Add(currentParentId))
+                        {
+                            folder.ParentFolderId = null;
+                            changed = true;
+                            break;
+                        }
+
+                        parentId = folders.FirstOrDefault(candidate => candidate.Id == currentParentId)?.ParentFolderId;
+                    }
+                }
+            }
+
+            return folders;
+        }
+
+        private static PromptItem ClonePrompt(PromptItem prompt) => new()
+        {
+            Id = prompt.Id,
+            FolderId = prompt.FolderId,
+            Name = prompt.Name ?? string.Empty,
+            Description = prompt.Description ?? string.Empty,
+            Content = prompt.Content ?? string.Empty,
+            Tags = [.. prompt.Tags ?? []],
+            Quality = prompt.Quality,
+            AiModel = prompt.AiModel ?? string.Empty,
+            CreatedAt = prompt.CreatedAt,
+            UpdatedAt = prompt.UpdatedAt
+        };
+
+        private static PromptFolder CloneFolder(PromptFolder folder) => new()
+        {
+            Id = folder.Id,
+            ParentFolderId = folder.ParentFolderId,
+            Name = folder.Name ?? string.Empty,
+            Description = folder.Description ?? string.Empty,
+            CreatedAt = folder.CreatedAt,
+            UpdatedAt = folder.UpdatedAt
+        };
 
         public void DeletePrompt(int promptId) => prompts.Delete(promptId);
 
