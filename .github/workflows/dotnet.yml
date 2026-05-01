@@ -12,6 +12,8 @@ permissions:
 jobs:
   build:
     runs-on: windows-latest
+    env:
+      WINDOWS_TFM: net10.0-windows10.0.19041.0
 
     steps:
     - name: Checkout
@@ -22,14 +24,14 @@ jobs:
       with:
         dotnet-version: 10.0.x
 
-    - name: Install .NET MAUI Windows workload
-      run: dotnet workload install maui-windows
+    - name: Restore .NET workloads
+      run: dotnet workload restore PromptManager/PromptManager.csproj -p:TargetFrameworks=${{ env.WINDOWS_TFM }} -p:EnableWindowsTargeting=true
 
     - name: Restore dependencies
       run: dotnet restore PromptManager.UnitTests/PromptManager.UnitTests.csproj -p:EnableWindowsTargeting=true
 
     - name: Build app
-      run: dotnet build PromptManager/PromptManager.csproj -f net10.0-windows10.0.19041.0 --configuration Release --no-restore -p:EnableWindowsTargeting=true
+      run: dotnet build PromptManager/PromptManager.csproj -f ${{ env.WINDOWS_TFM }} --configuration Release --no-restore -p:TargetFrameworks=${{ env.WINDOWS_TFM }} -p:EnableWindowsTargeting=true
 
     - name: Build tests
       run: dotnet build PromptManager.UnitTests/PromptManager.UnitTests.csproj --configuration Release --no-restore -p:EnableWindowsTargeting=true
