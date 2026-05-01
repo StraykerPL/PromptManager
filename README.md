@@ -88,7 +88,7 @@ dotnet build "PromptManager.slnx"
 
 ## Current Scope
 
-Prompt Manager currently focuses on local personal prompt management. It does not include cloud sync, accounts, import/export, encryption settings, or collaboration workflows yet.
+Prompt Manager currently focuses on local personal prompt management. It does not include cloud sync, accounts, encryption settings, or collaboration workflows yet.
 
 ## Contributing
 

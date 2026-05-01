@@ -18,7 +18,7 @@ Prompt Manager is a local-first .NET MAUI app for managing reusable prompts. The
 
 - Left pane: search, folder tree, flat prompt list, and quick copy actions.
 - Right pane: prompt or folder editor.
-- Top bar: tag manager, model manager, browse mode toggle, and create actions.
+- Top bar: settings, browse mode toggle, and create actions.
 
 ## Documentation Rules
 

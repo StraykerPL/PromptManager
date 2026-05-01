@@ -15,10 +15,7 @@ Prompt Manager is a desktop app for saving, organizing, searching, and copying r
 
 The top bar contains the main actions:
 
-- **Tags** opens the tag manager.
-- **Models** opens the AI model manager.
-- **Import** loads prompts, folders, tags, and models from a JSON file.
-- **Export** saves prompts, folders, tags, and models to a JSON file.
+- **Settings** opens data import/export, tag management, AI model management, and About.
 - **All prompts** switches the left list from folder tree mode to a flat list of every prompt.
 - **New folder** opens the folder editor.
 - **New prompt** opens the prompt editor.
@@ -131,7 +128,7 @@ Use the **Quality** slider in the prompt editor when creating or editing a promp
 
 ## Managing Tags
 
-Select **Tags** to open the tag manager.
+Select **Settings** to open the settings dialog, then use the **Tags** section.
 
 To add a tag:
 
@@ -154,7 +151,7 @@ Tags are cleaned up automatically:
 
 ## Managing AI Models
 
-Select **Models** to open the AI model manager.
+Select **Settings** to open the settings dialog, then use the **AI models** section.
 
 To add a model:
 
@@ -177,9 +174,9 @@ Model names are cleaned up automatically:
 
 ## Importing And Exporting Data
 
-Select **Export** to save the current Prompt Manager data to a JSON file. The system save dialog asks where to store the file and only offers the JSON file type.
+Select **Settings**, then select **Export** to save the current Prompt Manager data to a JSON file. The system save dialog asks where to store the file and only offers the JSON file type.
 
-Select **Import** to load data from a JSON file. The system open dialog is filtered to JSON files. Importing replaces the current local prompts, folders, tags, and AI models, so the app asks for confirmation before loading the file.
+Select **Settings**, then select **Import** to load data from a JSON file. The system open dialog is filtered to JSON files. Importing replaces the current local prompts, folders, tags, and AI models, so the app asks for confirmation before loading the file.
 
 Imported data is cleaned up before it is saved:
 
@@ -187,6 +184,10 @@ Imported data is cleaned up before it is saved:
 - Tags and model names are trimmed, deduplicated, and sorted.
 - Prompts that point to missing folders are moved to the root level.
 - Folders that point to missing, invalid, or cyclic parents are moved to the root level.
+
+## About
+
+Select **Settings**, then select **About** to view the app name, app version, .NET version, app logo, copyright placeholder, and GitHub repository link placeholder.
 
 ## Storage And Startup
 
@@ -196,7 +197,7 @@ If a damaged storage file is detected, the app attempts to move it aside as a ba
 
 ## Current Limitations
 
-Prompt Manager currently does not provide built-in cloud sync, accounts, collaboration, import/export, or encryption settings. Data is local to the device and app data directory.
+Prompt Manager currently does not provide built-in cloud sync, accounts, collaboration, or encryption settings. Data is local to the device and app data directory.
 
 ## Recommended Workflow
 

@@ -13,7 +13,7 @@
               RowSpacing="14">
 
         <Grid Grid.ColumnSpan="2"
-              ColumnDefinitions="*,Auto,Auto,Auto,Auto,Auto,Auto,Auto"
+              ColumnDefinitions="*,Auto,Auto,Auto,Auto"
               ColumnSpacing="10">
             <VerticalStackLayout Spacing="2">
                 <Label Text="Prompt Manager"
@@ -23,25 +23,16 @@
             </VerticalStackLayout>
 
             <Button Grid.Column="1"
-                    Text="Tags"
-                    Clicked="OnTagsClicked" />
+                    Text="Settings"
+                    Clicked="OnSettingsClicked" />
             <Button Grid.Column="2"
-                    Text="Models"
-                    Clicked="OnModelsClicked" />
-            <Button Grid.Column="3"
-                    Text="Import"
-                    Clicked="OnImportClicked" />
-            <Button Grid.Column="4"
-                    Text="Export"
-                    Clicked="OnExportClicked" />
-            <Button Grid.Column="5"
                     x:Name="BrowseModeButton"
                     Text="All prompts"
                     Clicked="OnShowAllClicked" />
-            <Button Grid.Column="6"
+            <Button Grid.Column="3"
                     Text="New folder"
                     Clicked="OnNewFolderClicked" />
-            <Button Grid.Column="7"
+            <Button Grid.Column="4"
                     Text="New prompt"
                     Clicked="OnNewPromptClicked" />
         </Grid>
@@ -293,52 +284,104 @@
         </Grid>
         </Grid>
 
-        <Grid x:Name="TagsDialogOverlay"
+        <Grid x:Name="SettingsDialogOverlay"
               IsVisible="False"
               BackgroundColor="#99000000">
-            <Border WidthRequest="420"
+            <Border WidthRequest="720"
                     HorizontalOptions="Center"
                     VerticalOptions="Center"
                     BackgroundColor="#161A1E"
                     Stroke="#2A3036"
                     StrokeShape="RoundRectangle 8">
                 <Grid Padding="16"
-                      RowDefinitions="Auto,Auto,*,Auto"
+                      RowDefinitions="Auto,*,Auto"
                       RowSpacing="12">
-                    <Label Text="Tags"
-                           TextColor="#F2F4F8"
-                           FontSize="18"
-                           FontAttributes="Bold" />
-
-                    <Grid Grid.Row="1"
-                          ColumnDefinitions="*,Auto"
+                    <Grid ColumnDefinitions="*,Auto"
                           ColumnSpacing="10">
-                        <Entry x:Name="TagNameInput"
-                               Placeholder="New tag"
-                               BackgroundColor="#20252B"
+                        <Label Text="Settings"
                                TextColor="#F2F4F8"
-                               PlaceholderColor="#7C8794"
-                               Completed="OnAddTagClicked" />
+                               FontSize="18"
+                               FontAttributes="Bold"
+                               VerticalTextAlignment="Center" />
                         <Button Grid.Column="1"
-                                Text="Add"
-                                Clicked="OnAddTagClicked" />
+                                Text="About"
+                                Clicked="OnAboutClicked" />
                     </Grid>
+                    <ScrollView Grid.Row="1"
+                                MaximumHeightRequest="620">
+                        <VerticalStackLayout Spacing="18">
+                            <VerticalStackLayout Spacing="10">
+                                <Label Text="Data"
+                                       TextColor="#F2F4F8"
+                                       FontSize="16"
+                                       FontAttributes="Bold" />
+                                <Grid ColumnDefinitions="Auto,Auto,*"
+                                      ColumnSpacing="10">
+                                    <Button Text="Import"
+                                            Clicked="OnImportClicked" />
+                                    <Button Grid.Column="1"
+                                            Text="Export"
+                                            Clicked="OnExportClicked" />
+                                </Grid>
+                            </VerticalStackLayout>
 
-                    <ScrollView Grid.Row="2"
-                                MaximumHeightRequest="280">
-                        <VerticalStackLayout x:Name="TagsDialogList"
-                                             Spacing="8" />
+                            <VerticalStackLayout Spacing="10">
+                                <Label Text="Tags"
+                                       TextColor="#F2F4F8"
+                                       FontSize="16"
+                                       FontAttributes="Bold" />
+                                <Grid ColumnDefinitions="*,Auto"
+                                      ColumnSpacing="10">
+                                    <Entry x:Name="TagNameInput"
+                                           Placeholder="New tag"
+                                           BackgroundColor="#20252B"
+                                           TextColor="#F2F4F8"
+                                           PlaceholderColor="#7C8794"
+                                           Completed="OnAddTagClicked" />
+                                    <Button Grid.Column="1"
+                                            Text="Add"
+                                            Clicked="OnAddTagClicked" />
+                                </Grid>
+                                <ScrollView MaximumHeightRequest="220">
+                                    <VerticalStackLayout x:Name="TagsDialogList"
+                                                         Spacing="8" />
+                                </ScrollView>
+                            </VerticalStackLayout>
+
+                            <VerticalStackLayout Spacing="10">
+                                <Label Text="AI models"
+                                       TextColor="#F2F4F8"
+                                       FontSize="16"
+                                       FontAttributes="Bold" />
+                                <Grid ColumnDefinitions="*,Auto"
+                                      ColumnSpacing="10">
+                                    <Entry x:Name="ModelNameInput"
+                                           Placeholder="New model"
+                                           BackgroundColor="#20252B"
+                                           TextColor="#F2F4F8"
+                                           PlaceholderColor="#7C8794"
+                                           Completed="OnAddModelClicked" />
+                                    <Button Grid.Column="1"
+                                            Text="Add"
+                                            Clicked="OnAddModelClicked" />
+                                </Grid>
+                                <ScrollView MaximumHeightRequest="220">
+                                    <VerticalStackLayout x:Name="ModelsDialogList"
+                                                         Spacing="8" />
+                                </ScrollView>
+                            </VerticalStackLayout>
+                        </VerticalStackLayout>
                     </ScrollView>
 
-                    <Button Grid.Row="3"
+                    <Button Grid.Row="2"
                             Text="Close"
                             HorizontalOptions="End"
-                            Clicked="OnCloseTagsClicked" />
+                            Clicked="OnCloseSettingsClicked" />
                 </Grid>
             </Border>
         </Grid>
 
-        <Grid x:Name="ModelsDialogOverlay"
+        <Grid x:Name="AboutDialogOverlay"
               IsVisible="False"
               BackgroundColor="#99000000">
             <Border WidthRequest="420"
@@ -348,37 +391,60 @@
                     Stroke="#2A3036"
                     StrokeShape="RoundRectangle 8">
                 <Grid Padding="16"
-                      RowDefinitions="Auto,Auto,*,Auto"
-                      RowSpacing="12">
-                    <Label Text="AI models"
+                      RowDefinitions="Auto,Auto,Auto,Auto"
+                      RowSpacing="14">
+                    <Label Text="About"
                            TextColor="#F2F4F8"
                            FontSize="18"
                            FontAttributes="Bold" />
 
-                    <Grid Grid.Row="1"
-                          ColumnDefinitions="*,Auto"
-                          ColumnSpacing="10">
-                        <Entry x:Name="ModelNameInput"
-                               Placeholder="New model"
-                               BackgroundColor="#20252B"
+                    <VerticalStackLayout Grid.Row="1"
+                                         Spacing="10"
+                                         HorizontalOptions="Center">
+                        <Image Source="icon.ico"
+                               WidthRequest="96"
+                               HeightRequest="96"
+                               Aspect="AspectFit" />
+                        <Label Text="Prompt Manager"
                                TextColor="#F2F4F8"
-                               PlaceholderColor="#7C8794"
-                               Completed="OnAddModelClicked" />
-                        <Button Grid.Column="1"
-                                Text="Add"
-                                Clicked="OnAddModelClicked" />
-                    </Grid>
+                               FontSize="20"
+                               FontAttributes="Bold"
+                               HorizontalTextAlignment="Center" />
+                    </VerticalStackLayout>
 
-                    <ScrollView Grid.Row="2"
-                                MaximumHeightRequest="280">
-                        <VerticalStackLayout x:Name="ModelsDialogList"
-                                             Spacing="8" />
-                    </ScrollView>
+                    <VerticalStackLayout Grid.Row="2"
+                                         Spacing="8">
+                        <Grid ColumnDefinitions="Auto,*"
+                              ColumnSpacing="12">
+                            <Label Text="App version"
+                                   TextColor="#CBD5E1" />
+                            <Label Grid.Column="1"
+                                   x:Name="AboutAppVersionLabel"
+                                   TextColor="#F2F4F8" />
+                        </Grid>
+                        <Grid ColumnDefinitions="Auto,*"
+                              ColumnSpacing="12">
+                            <Label Text=".NET version"
+                                   TextColor="#CBD5E1" />
+                            <Label Grid.Column="1"
+                                   x:Name="AboutDotNetVersionLabel"
+                                   TextColor="#F2F4F8" />
+                        </Grid>
+                        <Label Text="Copyright © 2018-actual Daniel Strayker Nowak All rights reserved"
+                               TextColor="#CBD5E1" />
+                        <Label Text="https://github.com/StraykerPL/PromptManager"
+                               TextColor="#0099FF"
+                               TextDecorations="Underline">
+                            <Label.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="OnRepositoryLinkTapped" />
+                            </Label.GestureRecognizers>
+                        </Label>
+                    </VerticalStackLayout>
 
                     <Button Grid.Row="3"
                             Text="Close"
                             HorizontalOptions="End"
-                            Clicked="OnCloseModelsClicked" />
+                            Clicked="OnCloseAboutClicked" />
                 </Grid>
             </Border>
         </Grid>

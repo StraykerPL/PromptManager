@@ -38,6 +38,8 @@ namespace PromptManager
         {
             InitializeComponent();
             TreeList.ItemsSource = treeNodes;
+            AboutAppVersionLabel.Text = AppInfo.Current.VersionString;
+            AboutDotNetVersionLabel.Text = Environment.Version.ToString();
 
             try
             {
@@ -278,6 +280,7 @@ namespace PromptManager
                 showAllPrompts = false;
                 SearchInput.Text = string.Empty;
                 LoadData();
+                RenderSettingsDialog();
                 StartNewPrompt();
 
                 await DisplayAlertAsync("Import complete", "Prompt Manager data was imported.", "OK");
@@ -342,21 +345,21 @@ namespace PromptManager
 #endif
         }
 
-        private async void OnTagsClicked(object? sender, EventArgs e)
+        private void OnSettingsClicked(object? sender, EventArgs e)
+        {
+            TagNameInput.Text = string.Empty;
+            ModelNameInput.Text = string.Empty;
+            RenderSettingsDialog();
+            SettingsDialogOverlay.IsVisible = true;
+        }
+
+        private async void OnAddTagClicked(object? sender, EventArgs e)
         {
             if (!await EnsureRepositoryAvailable())
             {
                 return;
             }
 
-            TagNameInput.Text = string.Empty;
-            RenderTagsDialog();
-            TagsDialogOverlay.IsVisible = true;
-            TagNameInput.Focus();
-        }
-
-        private async void OnAddTagClicked(object? sender, EventArgs e)
-        {
             var tag = TagNameInput.Text?.Trim();
             if (string.IsNullOrWhiteSpace(tag))
             {
@@ -377,6 +380,11 @@ namespace PromptManager
 
         private async void OnRemoveTagClicked(object? sender, EventArgs e)
         {
+            if (!await EnsureRepositoryAvailable())
+            {
+                return;
+            }
+
             if ((sender as Button)?.ClassId is not string tag)
             {
                 return;
@@ -390,9 +398,9 @@ namespace PromptManager
             RenderPromptTagChips();
         }
 
-        private void OnCloseTagsClicked(object? sender, EventArgs e)
+        private void OnCloseSettingsClicked(object? sender, EventArgs e)
         {
-            TagsDialogOverlay.IsVisible = false;
+            SettingsDialogOverlay.IsVisible = false;
         }
 
         private async Task SaveAvailableTags()
@@ -405,21 +413,28 @@ namespace PromptManager
             repository!.SaveAvailableTags(availableTags);
         }
 
-        private async void OnModelsClicked(object? sender, EventArgs e)
+        private void OnAboutClicked(object? sender, EventArgs e)
+        {
+            AboutDialogOverlay.IsVisible = true;
+        }
+
+        private void OnCloseAboutClicked(object? sender, EventArgs e)
+        {
+            AboutDialogOverlay.IsVisible = false;
+        }
+
+        private async void OnRepositoryLinkTapped(object? sender, TappedEventArgs e)
+        {
+            await Browser.Default.OpenAsync("https://github.com/StraykerPL/PromptManager", BrowserLaunchMode.SystemPreferred);
+        }
+
+        private async void OnAddModelClicked(object? sender, EventArgs e)
         {
             if (!await EnsureRepositoryAvailable())
             {
                 return;
             }
 
-            ModelNameInput.Text = string.Empty;
-            RenderModelsDialog();
-            ModelsDialogOverlay.IsVisible = true;
-            ModelNameInput.Focus();
-        }
-
-        private async void OnAddModelClicked(object? sender, EventArgs e)
-        {
             var model = ModelNameInput.Text?.Trim();
             if (string.IsNullOrWhiteSpace(model))
             {
@@ -440,6 +455,11 @@ namespace PromptManager
 
         private async void OnRemoveModelClicked(object? sender, EventArgs e)
         {
+            if (!await EnsureRepositoryAvailable())
+            {
+                return;
+            }
+
             if ((sender as Button)?.ClassId is not string model)
             {
                 return;
@@ -452,11 +472,6 @@ namespace PromptManager
             RenderModelsDialog();
         }
 
-        private void OnCloseModelsClicked(object? sender, EventArgs e)
-        {
-            ModelsDialogOverlay.IsVisible = false;
-        }
-
         private async Task SaveAvailableModels()
         {
             if (!await EnsureRepositoryAvailable())
@@ -465,6 +480,12 @@ namespace PromptManager
             }
 
             repository!.SaveAvailableModels(availableModels);
+        }
+
+        private void RenderSettingsDialog()
+        {
+            RenderTagsDialog();
+            RenderModelsDialog();
         }
 
         private void RenderTagsDialog()
