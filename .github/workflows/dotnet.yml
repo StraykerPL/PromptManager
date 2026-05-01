@@ -14,6 +14,7 @@ jobs:
     runs-on: windows-latest
     env:
       WINDOWS_TFM: net10.0-windows10.0.19041.0
+      WINDOWS_RID: win-x64
 
     steps:
     - name: Checkout
@@ -25,13 +26,16 @@ jobs:
         dotnet-version: 10.0.x
 
     - name: Restore .NET workloads
-      run: dotnet workload restore PromptManager/PromptManager.csproj -p:TargetFrameworks=${{ env.WINDOWS_TFM }} -p:EnableWindowsTargeting=true
+      run: dotnet workload restore PromptManager/PromptManager.csproj -p:TargetFrameworks=${{ env.WINDOWS_TFM }} -p:RuntimeIdentifier=${{ env.WINDOWS_RID }} -p:EnableWindowsTargeting=true
 
-    - name: Restore dependencies
+    - name: Restore app dependencies
+      run: dotnet restore PromptManager/PromptManager.csproj -r ${{ env.WINDOWS_RID }} -p:TargetFrameworks=${{ env.WINDOWS_TFM }} -p:EnableWindowsTargeting=true
+
+    - name: Restore test dependencies
       run: dotnet restore PromptManager.UnitTests/PromptManager.UnitTests.csproj -p:EnableWindowsTargeting=true
 
     - name: Build app
-      run: dotnet build PromptManager/PromptManager.csproj -f ${{ env.WINDOWS_TFM }} --configuration Release --no-restore -p:TargetFrameworks=${{ env.WINDOWS_TFM }} -p:EnableWindowsTargeting=true
+      run: dotnet build PromptManager/PromptManager.csproj -f ${{ env.WINDOWS_TFM }} -r ${{ env.WINDOWS_RID }} --configuration Release --no-restore -p:TargetFrameworks=${{ env.WINDOWS_TFM }} -p:EnableWindowsTargeting=true
 
     - name: Build tests
       run: dotnet build PromptManager.UnitTests/PromptManager.UnitTests.csproj --configuration Release --no-restore -p:EnableWindowsTargeting=true
