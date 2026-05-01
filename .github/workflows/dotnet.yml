@@ -1,6 +1,3 @@
-# This workflow will build a .NET project
-# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-net
-
 name: .NET
 
 on:
@@ -9,20 +6,33 @@ on:
   pull_request:
     branches: [ "main" ]
 
+permissions:
+  contents: read
+
 jobs:
   build:
-
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
 
     steps:
-    - uses: actions/checkout@v4
+    - name: Checkout
+      uses: actions/checkout@v6
+
     - name: Setup .NET
-      uses: actions/setup-dotnet@v4
+      uses: actions/setup-dotnet@v5
       with:
-        dotnet-version: 8.0.x
+        dotnet-version: 10.0.x
+
+    - name: Install .NET MAUI Windows workload
+      run: dotnet workload install maui-windows
+
     - name: Restore dependencies
-      run: dotnet restore
-    - name: Build
-      run: dotnet build --no-restore
+      run: dotnet restore PromptManager.UnitTests/PromptManager.UnitTests.csproj -p:EnableWindowsTargeting=true
+
+    - name: Build app
+      run: dotnet build PromptManager/PromptManager.csproj -f net10.0-windows10.0.19041.0 --configuration Release --no-restore -p:EnableWindowsTargeting=true
+
+    - name: Build tests
+      run: dotnet build PromptManager.UnitTests/PromptManager.UnitTests.csproj --configuration Release --no-restore -p:EnableWindowsTargeting=true
+
     - name: Test
-      run: dotnet test --no-build --verbosity normal
+      run: dotnet test PromptManager.UnitTests/PromptManager.UnitTests.csproj --configuration Release --no-build --verbosity normal -p:EnableWindowsTargeting=true
