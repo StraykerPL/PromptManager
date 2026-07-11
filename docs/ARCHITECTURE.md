@@ -1,26 +1,28 @@
 # Architecture
 
-Prompt Manager is a single-project .NET MAUI app with a small service layer and local LiteDB persistence.
+Prompt Manager is an Avalonia desktop app with a shared Core library and local LiteDB persistence.
+
+Database paths are handled by `DatabaseLocationSettingsStore`, `DatabaseLocationResolver`, and `DatabaseLocationChangeService`. Resolution is custom → compile-time Debug executable directory → Release system app-data. Startup captures one immutable path for both the initial repository and retry factory. Core stays Avalonia-independent through `IDatabaseDirectoryProvider`.
 
 ## High-Level Flow
 
-`MainPage` owns the screen state and UI event handlers. On startup it creates a `PromptRepository`, loads folders, prompts, tag options, and model options, then asks `PromptTreeService` to build the left-side tree/list.
+`MainWindowViewModel` owns screen state and commands. On startup the app creates a `PromptRepository`, loads folders, prompts, tag options, and model options, then asks `PromptTreeService` to build the left-side tree/list.
 
 The main runtime flow is:
 
 1. Repository loads normalized data from LiteDB.
-2. `MainPage` stores the current in-memory lists.
+2. `MainWindowViewModel` stores the current in-memory lists.
 3. `PromptTreeService` creates display nodes for the tree or flat list.
 4. User actions update the selected prompt or folder.
 5. Save/delete actions go through `PromptRepository`.
-6. The page reloads data and refreshes the tree/list.
+6. The view model reloads data and refreshes the tree/list.
 
 ## UI Layer
 
 Main files:
 
-- `PromptManager/MainPage.xaml`
-- `PromptManager/MainPage.xaml.cs`
+- `PromptManager.UI/Views/MainWindow.axaml`
+- `PromptManager.UI/ViewModels/MainWindowViewModel.cs`
 
 The UI is split into:
 
@@ -29,7 +31,7 @@ The UI is split into:
 - Right panel for prompt or folder editing.
 - Modal overlays for tags and AI models.
 
-The left navigation is implemented with a MAUI `CollectionView` bound to `ObservableCollection<PromptTreeNode>`. Folder expansion is controlled by `expandedFolderIds` in `MainPage`.
+The left navigation is an Avalonia `ListBox` bound to `ObservableCollection<PromptTreeNode>`. Folder expansion is controlled by `expandedFolderIds` in `MainWindowViewModel`.
 
 ## Services
 
@@ -118,6 +120,4 @@ Search results are shown as a flat prompt list.
 
 ## Platform Notes
 
-Windows is the primary app target. The project also contains Android, iOS, and MacCatalyst platform folders from the MAUI single-project structure.
-
-Windows-specific UI behavior should be guarded with `#if WINDOWS` in code-behind or platform-specific files.
+The Avalonia desktop project targets Windows and Linux. Platform integration is isolated behind app-data, clipboard, file-dialog, launcher, app-info, and dialog services.

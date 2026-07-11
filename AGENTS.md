@@ -2,31 +2,27 @@
 
 ## Project Structure & Module Organization
 
-This repository contains a single .NET MAUI app with Windows as the primary development and validation target. The solution entry point is `PromptManager.slnx`, and the app project is `PromptManager/PromptManager.csproj`.
+This repository contains an Avalonia desktop app, shared Core library, and xUnit tests. The solution entry point is `PromptManager.slnx`, and the app project is `PromptManager.UI/PromptManager.UI.csproj`.
 
-- `PromptManager/`: application source, XAML views, and MAUI startup code.
-- `PromptManager/Models/`: data models such as prompt, folder, tag, and tree node types.
-- `PromptManager/Services/`: persistence and application services, including the LiteDB repository.
-- `PromptManager/Platforms/Windows/`: Windows-specific app entry point and manifests.
-- `PromptManager/Platforms/Android/`, `iOS/`, `MacCatalyst/`: secondary platform targets.
-- `PromptManager/Resources/`: app icons, splash screen, fonts, images, and styles.
+- `PromptManager.UI/`: Avalonia views, view models, desktop services, resources, and startup code.
+- `PromptManager.Core/Models/`: prompt, folder, tag, and tree node data models.
+- `PromptManager.Core/Services/`: persistence and application services, including the LiteDB repository.
+- `PromptManager.UnitTests/`: xUnit tests for Core and desktop path behavior.
 - `docs/`: project documentation.
-
-There is currently no dedicated test project.
 
 ## Build, Test, and Development Commands
 
-Run app/debug commands from the project folder. Prefer the Windows target unless a change explicitly affects another platform.
+Run app/debug commands from the repository root.
 
-```powershell
-cd PromptManager
-dotnet restore "PromptManager.csproj"
-dotnet run "PromptManager.csproj" -f net10.0-windows10.0.19041.0
-dotnet build "PromptManager.csproj" -f net10.0-windows10.0.19041.0
-dotnet build "..\PromptManager.slnx"
+```sh
+dotnet restore PromptManager.UI/PromptManager.UI.csproj
+dotnet run --project PromptManager.UI/PromptManager.UI.csproj
+dotnet build PromptManager.UI/PromptManager.UI.csproj
+dotnet test PromptManager.UnitTests/PromptManager.UnitTests.csproj
+dotnet build PromptManager.slnx
 ```
 
-`dotnet run "PromptManager.csproj" -f net10.0-windows10.0.19041.0` is the primary local debug workflow. Use the Windows `dotnet build` command for fast compile-only validation. Build the solution when checking cross-platform project configuration; Android builds require a valid JDK, not only a JRE.
+Use the Avalonia `dotnet run` command for local debugging. Build the solution when checking project configuration across the app, Core library, and tests.
 
 ## Coding Style & Naming Conventions
 
@@ -41,15 +37,15 @@ namespace PromptManager.Services
 }
 ```
 
-Use `PromptManager` as the root namespace. Use PascalCase for types, methods, properties, and XAML class names; use camelCase for local variables and private fields. Keep project and folder names free of spaces. Preserve 4-space C# indentation and concise XAML formatting. Keep Windows XAML namespace references aligned with `PromptManager.WinUI`.
+Use `PromptManager` as the root namespace. Use PascalCase for types, methods, properties, and AXAML class names; use camelCase for local variables and private fields. Keep project and folder names free of spaces. Preserve 4-space C# indentation and concise AXAML formatting.
 
 ## Testing Guidelines
 
-No automated test suite is configured yet. When adding tests, create `PromptManager.Tests`, use xUnit or NUnit consistently, and name test files after the type under test, for example `PromptRepositoryTests.cs`. Until tests exist, validate with the Windows build command and manual Windows MAUI smoke testing.
+Use xUnit consistently and name test files after the type under test, for example `PromptRepositoryTests.cs`. Validate with the solution build, unit tests, and manual Avalonia desktop smoke testing.
 
 ## Commit & Pull Request Guidelines
 
-Recent commits use short imperative summaries, such as `Rename project to follow conventions...`. Keep commit subjects clear and action-oriented. Pull requests should include a short description, Windows verification steps, and screenshots for visible UI changes. Call out Android, iOS, or MacCatalyst impact only when touched.
+Recent commits use short imperative summaries, such as `Rename project to follow conventions...`. Keep commit subjects clear and action-oriented. Pull requests should include a short description, desktop verification steps, and screenshots for visible UI changes. Call out Windows or Linux impact when platform behavior is touched.
 
 ## Agent-Specific Instructions
 

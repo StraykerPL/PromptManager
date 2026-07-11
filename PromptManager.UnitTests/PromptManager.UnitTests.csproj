@@ -1,14 +1,10 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net10.0-windows10.0.19041.0</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <IsPackable>false</IsPackable>
-    <EnableMauiAssetProcessing>false</EnableMauiAssetProcessing>
-    <EnableMauiSplashScreenProcessing>false</EnableMauiSplashScreenProcessing>
-    <EnableMauiFontProcessing>false</EnableMauiFontProcessing>
-    <EnableMauiImageProcessing>false</EnableMauiImageProcessing>
   </PropertyGroup>
 
   <ItemGroup>
@@ -20,7 +16,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\PromptManager\PromptManager.csproj" />
+    <ProjectReference Include="../PromptManager.UI/PromptManager.UI.csproj" />
+    <ProjectReference Include="../PromptManager.Core/PromptManager.Core.csproj" />
   </ItemGroup>
 
   <ItemGroup>

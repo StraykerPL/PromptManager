@@ -1,38 +1,38 @@
 # Contributing To Prompt Manager
 
-Contributions should keep the app simple, local-first, and reliable on Windows. Before opening a pull request, read [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) and check the existing documentation under [docs/](docs/README.md).
+Contributions should keep the app simple, local-first, and reliable on Windows and Linux. Before opening a pull request, read [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) and check the existing documentation under [docs/](docs/README.md).
 
 ## Good First Areas
 
 - Fix bugs in prompt editing, folder tree behavior, search, or data cleanup.
 - Improve documentation when behavior changes.
 - Add focused unit tests for repository, tree, and validation behavior.
-- Improve Windows MAUI usability without broad visual rewrites.
+- Improve Avalonia desktop usability without broad visual rewrites.
 
 ## Local Setup
 
 Restore packages:
 
-```powershell
-dotnet restore "PromptManager\PromptManager.csproj"
+```sh
+dotnet restore PromptManager.UI/PromptManager.UI.csproj
 ```
 
-Run the Windows app:
+Run the desktop app:
 
-```powershell
-dotnet run --project "PromptManager\PromptManager.csproj" -f net10.0-windows10.0.19041.0
+```sh
+dotnet run --project PromptManager.UI/PromptManager.UI.csproj
 ```
 
-Build the Windows app:
+Build the desktop app:
 
-```powershell
-dotnet build "PromptManager\PromptManager.csproj" -f net10.0-windows10.0.19041.0
+```sh
+dotnet build PromptManager.UI/PromptManager.UI.csproj
 ```
 
 Run tests:
 
-```powershell
-dotnet test "PromptManager.UnitTests\PromptManager.UnitTests.csproj"
+```sh
+dotnet test PromptManager.UnitTests/PromptManager.UnitTests.csproj
 ```
 
 ## Coding Guidelines
@@ -50,9 +50,9 @@ dotnet test "PromptManager.UnitTests\PromptManager.UnitTests.csproj"
 
 For code changes, run at least:
 
-```powershell
-dotnet test "PromptManager.UnitTests\PromptManager.UnitTests.csproj"
-dotnet build "PromptManager\PromptManager.csproj" -f net10.0-windows10.0.19041.0
+```sh
+dotnet test PromptManager.UnitTests/PromptManager.UnitTests.csproj
+dotnet build PromptManager.slnx
 ```
 
 Add tests when changing:
@@ -63,7 +63,7 @@ Add tests when changing:
 - Delete behavior.
 - Repository persistence rules.
 
-For visible UI changes, include a short manual Windows smoke test in the pull request.
+For visible UI changes, include an appropriate Windows and/or Linux desktop smoke test in the pull request. Changes to paths, storage, clipboard, file dialogs, URL launching, fonts, windowing, or packaging must state which platforms were tested.
 
 ## Documentation Expectations
 
@@ -77,7 +77,7 @@ Update documentation in the same change when behavior changes:
 ## Pull Request Checklist
 
 - The change is scoped to the issue or task.
-- Windows build passes.
+- CI/build validation passes on Windows and Linux.
 - Unit tests pass or skipped tests are explained.
 - Documentation is updated when needed.
 - Screenshots are included for visible UI changes.

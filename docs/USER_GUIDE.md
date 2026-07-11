@@ -4,6 +4,8 @@ Prompt Manager is a desktop app for saving, organizing, searching, and copying r
 
 ## Quick Start
 
+Database storage can be changed under **Settings → Database storage**. The displayed path is marked Custom, Debug default, or System default. Choosing a folder offers safe copy/start-empty or use/replace choices; replacement is confirmed and backed up. Restore default validates the default destination. Changes apply after restart, and the former database is retained.
+
 1. Select **New folder** if you want to organize prompts by topic or project.
 2. Select **New prompt**.
 3. Enter a name and prompt text.

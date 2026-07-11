@@ -1,4 +1,5 @@
 <Solution>
-  <Project Path="PromptManager/PromptManager.csproj" />
+  <Project Path="PromptManager.UI/PromptManager.UI.csproj" />
+  <Project Path="PromptManager.Core/PromptManager.Core.csproj" />
   <Project Path="PromptManager.UnitTests/PromptManager.UnitTests.csproj" />
 </Solution>

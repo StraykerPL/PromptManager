@@ -1,0 +1,49 @@
+<Application xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="PromptManager.UI.App"
+             RequestedThemeVariant="Dark">
+  <Application.Styles>
+    <FluentTheme />
+    <Style Selector="Window">
+      <Setter Property="Background" Value="#1A2D47" />
+      <Setter Property="FontFamily" Value="avares://PromptManager.UI/Resources/Fonts#Open Sans" />
+    </Style>
+    <Style Selector="TextBlock">
+      <Setter Property="Foreground" Value="#F2F4F8" />
+    </Style>
+    <Style Selector="Button">
+      <Setter Property="Background" Value="#0099FF" />
+      <Setter Property="Foreground" Value="White" />
+      <Setter Property="CornerRadius" Value="8" />
+      <Setter Property="Padding" Value="14,8" />
+      <Setter Property="MinHeight" Value="34" />
+    </Style>
+    <Style Selector="Button.secondary">
+      <Setter Property="Background" Value="#FF3333" />
+    </Style>
+    <Style Selector="Button.subtle">
+      <Setter Property="Background" Value="#20252B" />
+      <Setter Property="Foreground" Value="#CBD5E1" />
+      <Setter Property="BorderBrush" Value="#0099FF" />
+      <Setter Property="BorderThickness" Value="1" />
+    </Style>
+    <Style Selector="TextBox">
+      <Setter Property="Background" Value="#20252B" />
+      <Setter Property="Foreground" Value="#F2F4F8" />
+      <Setter Property="BorderBrush" Value="#2A3036" />
+      <Setter Property="CornerRadius" Value="6" />
+    </Style>
+    <Style Selector="ComboBox">
+      <Setter Property="Background" Value="#20252B" />
+      <Setter Property="Foreground" Value="#F2F4F8" />
+      <Setter Property="BorderBrush" Value="#2A3036" />
+      <Setter Property="CornerRadius" Value="6" />
+    </Style>
+    <Style Selector="Border.panel">
+      <Setter Property="Background" Value="#161A1E" />
+      <Setter Property="BorderBrush" Value="#2A3036" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="CornerRadius" Value="8" />
+    </Style>
+  </Application.Styles>
+</Application>

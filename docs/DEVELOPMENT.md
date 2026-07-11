@@ -4,25 +4,32 @@ This guide covers the local development workflow for Prompt Manager.
 
 ## Primary Workflow
 
-Windows is the primary development and validation target.
+Windows and Linux are supported desktop development targets.
 
-```powershell
-dotnet restore "PromptManager\PromptManager.csproj"
-dotnet run --project "PromptManager\PromptManager.csproj" -f net10.0-windows10.0.19041.0
+Install the .NET 10 SDK feature band selected by `global.json` and Git. Windows 10 or later is supported. Linux development is validated on Debian 13 and Ubuntu 24.04 LTS; install `libx11-6`, `libice6`, `libsm6`, and `libfontconfig1` there. Other distributions may use different package names.
+
+Running the Linux GUI requires an active X11 or Wayland desktop session. Builds and tests can run headlessly, while GUI smoke tests need a desktop session or Xvfb. NuGet access is required for package restore.
+
+Run commands from the repository root:
+
+```sh
+dotnet --info
+dotnet restore PromptManager.slnx
+dotnet run --project PromptManager.UI/PromptManager.UI.csproj
 ```
 
-Use `dotnet run` when you need to manually test the MAUI app. Use `dotnet build` for faster compile validation.
+Use `dotnet run` for manual UI testing and `dotnet build` for faster compile validation.
 
-```powershell
-dotnet build "PromptManager\PromptManager.csproj" -f net10.0-windows10.0.19041.0
+```sh
+dotnet build PromptManager.UI/PromptManager.UI.csproj
 ```
 
 ## Tests
 
 The repository includes an xUnit test project:
 
-```powershell
-dotnet test "PromptManager.UnitTests\PromptManager.UnitTests.csproj"
+```sh
+dotnet test PromptManager.UnitTests/PromptManager.UnitTests.csproj
 ```
 
 The tests currently cover:
@@ -39,33 +46,30 @@ The tests currently cover:
 
 Build the solution when you change project files or target framework configuration:
 
-```powershell
-dotnet build "PromptManager.slnx"
+```sh
+dotnet build PromptManager.slnx
 ```
 
-The solution includes platform targets beyond Windows. Android builds require a valid JDK. iOS and MacCatalyst builds require the normal Apple platform tooling.
+The solution contains the Avalonia desktop app, shared Core library, and unit tests.
 
 ## Important Project Files
 
-- `PromptManager/PromptManager.csproj` - MAUI app project, target frameworks, package references, resources, and app metadata.
-- `PromptManager/Resources/Images/icon.ico` - main Windows app icon referenced by the project metadata.
-- `PromptManager/App.xaml` - app-level resources.
-- `PromptManager/AppShell.xaml` - shell setup.
-- `PromptManager/MainPage.xaml` - main UI layout.
-- `PromptManager/MainPage.xaml.cs` - UI event handling and screen state.
-- `PromptManager/Services/PromptRepository.cs` - LiteDB persistence.
-- `PromptManager/Services/PromptTreeService.cs` - tree, search, folder path, and descendant logic.
+- `PromptManager.UI/PromptManager.UI.csproj` - desktop app project and package references.
+- `PromptManager.UI/Views/MainWindow.axaml` - main UI layout.
+- `PromptManager.UI/ViewModels/MainWindowViewModel.cs` - screen state and commands.
+- `PromptManager.Core/Services/PromptRepository.cs` - LiteDB persistence.
+- `PromptManager.Core/Services/PromptTreeService.cs` - tree, search, folder path, and descendant logic.
 - `PromptManager.UnitTests/` - unit tests.
 
 ## Style Notes
 
-The app follows the existing MAUI template structure with project-specific services and models. Keep new code consistent with the current layout:
+Keep new code consistent with the Avalonia/Core separation:
 
-- Put storage and data access code in `Services/`.
-- Put simple data objects in `Models/`.
-- Keep UI layout in XAML where practical.
-- Keep event handlers small and delegate reusable logic to services.
-- Preserve Windows behavior as the primary validation path.
+- Put reusable storage and data access code in `PromptManager.Core/Services/`.
+- Put simple data objects in `PromptManager.Core/Models/`.
+- Keep UI layout in AXAML and application behavior in view models where practical.
+- Keep code-behind limited to UI integration.
+- Validate desktop behavior on Windows and Linux when affected.
 
 ## Manual Smoke Test
 
@@ -78,6 +82,14 @@ After UI or persistence changes, run the app and verify:
 5. Search finds the prompt by name, description, content, tag, and model where applicable.
 6. The prompt can be copied from the list and from the editor.
 7. Editing and deleting prompts or folders works as expected.
+8. Import and export dialogs filter JSON files and complete successfully.
+9. The repository link opens in the default browser.
+
+For platform-sensitive changes, run the applicable smoke test on both Windows and Linux and report the tested platforms in the pull request.
+
+## Packaging
+
+`installer/PromptManager.iss` is the Windows-only Inno Setup packaging path and is not part of the cross-platform development build. A Linux package is not currently provided; use a separate runtime-specific publish process such as `dotnet publish -r linux-x64`. Keep publish and installer output out of source control.
 
 ## Generated Output
 

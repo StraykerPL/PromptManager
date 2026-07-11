@@ -1,8 +1,8 @@
 # Prompt Manager
 
-<img src="PromptManager/Resources/Images/icon.ico" alt="Prompt Manager icon" width="96" height="96">
+<img src="PromptManager.UI/Assets/icon.ico" alt="Prompt Manager icon" width="96" height="96">
 
-Prompt Manager is a .NET MAUI desktop app for saving, organizing, searching, rating, and copying reusable prompts. It is built primarily for Windows development and validation, with Android, iOS, and MacCatalyst targets kept in the project for future platform work.
+Prompt Manager is an Avalonia desktop app for saving, organizing, searching, rating, and copying reusable prompts on Windows and Linux.
 
 The app is useful when you maintain a personal library of prompts for different tools, models, projects, or quality levels. Prompts can be grouped into nested folders, tagged, associated with an AI model, scored from 1 to 10, searched, and copied directly from the list or editor.
 
@@ -18,11 +18,12 @@ The app is useful when you maintain a personal library of prompts for different 
 - One-click prompt copying from the tree/list or editor.
 - JSON import/export for backing up or moving prompt data.
 - Corrupt database backup handling on startup.
+- Configurable database directory with guarded copy, replacement, and restore-default flows. Custom choices apply after restart; without one, Debug builds use the executable directory and Release builds use platform app-data. `settings.json` always remains in platform app-data.
 
 ## Tech Stack
 
 - .NET 10
-- .NET MAUI
+- Avalonia UI
 - C#
 - XAML
 - LiteDB
@@ -32,49 +33,51 @@ The app is useful when you maintain a personal library of prompts for different 
 ## Repository Layout
 
 - `PromptManager.slnx` - solution entry point.
-- `PromptManager/` - MAUI app source, XAML views, app startup, resources, and platform files.
-- `PromptManager/Models/` - prompt, folder, tag, model, and tree node models.
-- `PromptManager/Services/` - LiteDB repository and prompt tree/search service.
+- `PromptManager.UI/` - Avalonia UI, view model, desktop services, resources, and startup code.
+- `PromptManager.Core/` - shared models, LiteDB repository, and prompt tree/search service.
 - `PromptManager.UnitTests/` - xUnit tests for repository normalization/deletion behavior and tree/search behavior.
 - `docs/` - user, developer, architecture, storage, and troubleshooting documentation.
 
 ## Requirements
 
-- Windows for the primary local workflow.
-- .NET 10 SDK with MAUI workloads installed.
-- Windows App SDK / MAUI Windows prerequisites available through the .NET MAUI tooling.
-- Android JDK only if you build the Android target.
+- The .NET 10 SDK feature band pinned by `global.json` and Git. Check it with `dotnet --info`.
+- Windows 10 or later with a desktop session.
+- Debian 13 or Ubuntu 24.04 LTS with `libx11-6`, `libice6`, `libsm6`, and `libfontconfig1`. Package names differ on other distributions, which are not currently validated by CI.
+- Linux requires an active X11 or Wayland desktop session to run the GUI. Headless GUI tests need a graphical session such as Xvfb.
+
+Restoring dependencies requires access to NuGet.
 
 ## Getting Started
 
 Restore packages:
 
-```powershell
-dotnet restore "PromptManager\PromptManager.csproj"
+```sh
+dotnet --info
+dotnet restore PromptManager.UI/PromptManager.UI.csproj
 ```
 
-Run the Windows app:
+Run the desktop app:
 
-```powershell
-dotnet run --project "PromptManager\PromptManager.csproj" -f net10.0-windows10.0.19041.0
+```sh
+dotnet run --project PromptManager.UI/PromptManager.UI.csproj
 ```
 
-Build the Windows app:
+Build the desktop app:
 
-```powershell
-dotnet build "PromptManager\PromptManager.csproj" -f net10.0-windows10.0.19041.0
+```sh
+dotnet build PromptManager.UI/PromptManager.UI.csproj
 ```
 
 Run unit tests:
 
-```powershell
-dotnet test "PromptManager.UnitTests\PromptManager.UnitTests.csproj"
+```sh
+dotnet test PromptManager.UnitTests/PromptManager.UnitTests.csproj
 ```
 
 Build the solution:
 
-```powershell
-dotnet build "PromptManager.slnx"
+```sh
+dotnet build PromptManager.slnx
 ```
 
 ## Documentation

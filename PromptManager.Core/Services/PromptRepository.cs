@@ -1,0 +1,354 @@
+using LiteDB;
+using PromptManager.Models;
+
+namespace PromptManager.Services
+{
+
+    public sealed class PromptRepository : IPromptRepository
+    {
+        private LiteDatabase database = null!;
+        private ILiteCollection<PromptItem> prompts = null!;
+        private ILiteCollection<PromptFolder> folders = null!;
+        private ILiteCollection<PromptTagOption> tagOptions = null!;
+        private ILiteCollection<PromptModelOption> modelOptions = null!;
+
+        public PromptRepository(IAppDataPathProvider appDataPathProvider)
+            : this(appDataPathProvider.AppDataDirectory)
+        {
+        }
+
+        public PromptRepository(IDatabaseDirectoryProvider databaseDirectoryProvider)
+            : this(databaseDirectoryProvider.DatabaseDirectory)
+        {
+        }
+
+        public PromptRepository(string appDataDirectory)
+        {
+            var databasePath = Path.Combine(appDataDirectory, "prompts.db");
+            Directory.CreateDirectory(Path.GetDirectoryName(databasePath)!);
+
+            Initialize(databasePath);
+        }
+
+        internal PromptRepository(
+            ILiteCollection<PromptItem> prompts,
+            ILiteCollection<PromptFolder> folders,
+            ILiteCollection<PromptTagOption> tagOptions,
+            ILiteCollection<PromptModelOption> modelOptions)
+        {
+            this.prompts = prompts;
+            this.folders = folders;
+            this.tagOptions = tagOptions;
+            this.modelOptions = modelOptions;
+        }
+
+        private void Initialize(string path)
+        {
+            try
+            {
+                OpenCollections(path);
+            }
+            catch (Exception) when (File.Exists(path))
+            {
+                database?.Dispose();
+                File.Move(path, CreateBackupPath(path));
+                OpenCollections(path);
+            }
+        }
+
+        private void OpenCollections(string path)
+        {
+            var databaseFile = new FileInfo(path);
+            if (databaseFile.Exists && databaseFile.Length > 0 && databaseFile.Length < 8192)
+            {
+                throw new InvalidDataException("The existing LiteDB file is too small to contain a valid database page.");
+            }
+
+            database = new LiteDatabase(path);
+            prompts = database.GetCollection<PromptItem>("prompts");
+            folders = database.GetCollection<PromptFolder>("folders");
+            tagOptions = database.GetCollection<PromptTagOption>("tagOptions");
+            modelOptions = database.GetCollection<PromptModelOption>("modelOptions");
+
+            prompts.EnsureIndex(prompt => prompt.Name);
+            prompts.EnsureIndex(prompt => prompt.FolderId);
+            prompts.EnsureIndex(prompt => prompt.AiModel);
+            folders.EnsureIndex(folder => folder.Name);
+            folders.EnsureIndex(folder => folder.ParentFolderId);
+            tagOptions.EnsureIndex(tag => tag.Name, unique: true);
+            modelOptions.EnsureIndex(model => model.Name, unique: true);
+        }
+
+        private static string CreateBackupPath(string path)
+        {
+            var directory = Path.GetDirectoryName(path)!;
+            var timestamp = DateTime.UtcNow.ToString("yyyyMMddHHmmss");
+            var backupPath = Path.Combine(directory, $"prompts.corrupt-{timestamp}.db");
+
+            for (var index = 1; File.Exists(backupPath); index++)
+            {
+                backupPath = Path.Combine(directory, $"prompts.corrupt-{timestamp}-{index}.db");
+            }
+
+            return backupPath;
+        }
+
+        public IReadOnlyList<PromptItem> GetPrompts() =>
+            prompts.FindAll()
+                .Select(NormalizePrompt)
+                .OrderBy(prompt => prompt.Name)
+                .ToList();
+
+        public IReadOnlyList<PromptFolder> GetFolders() =>
+            folders.FindAll()
+                .Select(NormalizeFolder)
+                .OrderBy(folder => folder.Name)
+                .ToList();
+
+        public IReadOnlyList<string> GetAvailableTags() =>
+            NormalizeNames(tagOptions.FindAll().Select(tag => tag.Name)).ToList();
+
+        public IReadOnlyList<string> GetAvailableModels() =>
+            NormalizeNames(modelOptions.FindAll().Select(model => model.Name)).ToList();
+
+        public PromptDataDocument ExportData() => new()
+        {
+            Folders = GetFolders().Select(CloneFolder).ToList(),
+            Prompts = GetPrompts().Select(ClonePrompt).ToList(),
+            Tags = GetAvailableTags().ToList(),
+            Models = GetAvailableModels().ToList()
+        };
+
+        public void ImportData(PromptDataDocument document)
+        {
+            var importedFolders = NormalizeImportedFolders(document.Folders);
+            var importedFolderIds = importedFolders.Select(folder => folder.Id).ToHashSet();
+            var importedPrompts = (document.Prompts ?? [])
+                .Select(ClonePrompt)
+                .Select(NormalizePrompt)
+                .ToList();
+
+            foreach (var prompt in importedPrompts.Where(prompt => prompt.FolderId is int folderId && !importedFolderIds.Contains(folderId)))
+            {
+                prompt.FolderId = null;
+            }
+
+            prompts.DeleteAll();
+            folders.DeleteAll();
+            tagOptions.DeleteAll();
+            modelOptions.DeleteAll();
+
+            foreach (var folder in importedFolders)
+            {
+                folders.Insert(folder);
+            }
+
+            foreach (var prompt in importedPrompts)
+            {
+                prompts.Insert(prompt);
+            }
+
+            foreach (var tag in NormalizeTags(document.Tags))
+            {
+                tagOptions.Insert(new PromptTagOption { Name = tag });
+            }
+
+            foreach (var model in NormalizeNames(document.Models ?? []))
+            {
+                modelOptions.Insert(new PromptModelOption { Name = model });
+            }
+        }
+
+        public void SaveAvailableTags(IEnumerable<string> tags)
+        {
+            tagOptions.DeleteAll();
+
+            foreach (var tag in NormalizeTags(tags))
+            {
+                tagOptions.Insert(new PromptTagOption { Name = tag });
+            }
+        }
+
+        public void SaveAvailableModels(IEnumerable<string> models)
+        {
+            modelOptions.DeleteAll();
+
+            foreach (var model in NormalizeNames(models))
+            {
+                modelOptions.Insert(new PromptModelOption { Name = model });
+            }
+        }
+
+        public void SavePrompt(PromptItem prompt)
+        {
+            NormalizePrompt(prompt);
+            prompt.UpdatedAt = DateTime.UtcNow;
+
+            if (prompt.Id == 0)
+            {
+                prompt.CreatedAt = prompt.UpdatedAt;
+                prompt.Id = prompts.Insert(prompt).AsInt32;
+                return;
+            }
+
+            prompts.Update(prompt);
+        }
+
+        public void SaveFolder(PromptFolder folder)
+        {
+            NormalizeFolder(folder);
+            folder.UpdatedAt = DateTime.UtcNow;
+
+            if (folder.Id == 0)
+            {
+                folder.CreatedAt = folder.UpdatedAt;
+                folder.Id = folders.Insert(folder).AsInt32;
+                return;
+            }
+
+            folders.Update(folder);
+        }
+
+        private static PromptItem NormalizePrompt(PromptItem prompt)
+        {
+            prompt.Name ??= string.Empty;
+            prompt.Description ??= string.Empty;
+            prompt.Content ??= string.Empty;
+            prompt.AiModel = prompt.AiModel?.Trim() ?? string.Empty;
+            prompt.Quality = Math.Clamp(prompt.Quality, 1, 10);
+            prompt.Tags = NormalizeTags(prompt.Tags).ToList();
+            return prompt;
+        }
+
+        private static PromptFolder NormalizeFolder(PromptFolder folder)
+        {
+            folder.Name ??= string.Empty;
+            folder.Description ??= string.Empty;
+            return folder;
+        }
+
+        private static IEnumerable<string> NormalizeTags(IEnumerable<string>? tags) =>
+            (tags ?? [])
+                .Select(tag => tag.Trim())
+                .Where(tag => !string.IsNullOrWhiteSpace(tag))
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .Order(StringComparer.OrdinalIgnoreCase);
+
+        private static IEnumerable<string> NormalizeNames(IEnumerable<string?> names) =>
+            names
+                .Select(name => name?.Trim() ?? string.Empty)
+                .Where(name => !string.IsNullOrWhiteSpace(name))
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .Order(StringComparer.OrdinalIgnoreCase);
+
+        private static List<PromptFolder> NormalizeImportedFolders(IEnumerable<PromptFolder>? source)
+        {
+            var folders = (source ?? [])
+                .Select(CloneFolder)
+                .Where(folder => folder.Id > 0)
+                .Select(NormalizeFolder)
+                .GroupBy(folder => folder.Id)
+                .Select(group => group.First())
+                .OrderBy(folder => folder.Name)
+                .ToList();
+            var folderIds = folders.Select(folder => folder.Id).ToHashSet();
+
+            foreach (var folder in folders.Where(folder => folder.ParentFolderId is int parentId && (parentId == folder.Id || !folderIds.Contains(parentId))))
+            {
+                folder.ParentFolderId = null;
+            }
+
+            var changed = true;
+            while (changed)
+            {
+                changed = false;
+
+                foreach (var folder in folders.Where(folder => folder.ParentFolderId is not null))
+                {
+                    var seenIds = new HashSet<int> { folder.Id };
+                    var parentId = folder.ParentFolderId;
+
+                    while (parentId is int currentParentId)
+                    {
+                        if (!seenIds.Add(currentParentId))
+                        {
+                            folder.ParentFolderId = null;
+                            changed = true;
+                            break;
+                        }
+
+                        parentId = folders.FirstOrDefault(candidate => candidate.Id == currentParentId)?.ParentFolderId;
+                    }
+                }
+            }
+
+            return folders;
+        }
+
+        private static PromptItem ClonePrompt(PromptItem prompt) => new()
+        {
+            Id = prompt.Id,
+            FolderId = prompt.FolderId,
+            Name = prompt.Name ?? string.Empty,
+            Description = prompt.Description ?? string.Empty,
+            Content = prompt.Content ?? string.Empty,
+            Tags = [.. prompt.Tags ?? []],
+            Quality = prompt.Quality,
+            AiModel = prompt.AiModel ?? string.Empty,
+            CreatedAt = prompt.CreatedAt,
+            UpdatedAt = prompt.UpdatedAt
+        };
+
+        private static PromptFolder CloneFolder(PromptFolder folder) => new()
+        {
+            Id = folder.Id,
+            ParentFolderId = folder.ParentFolderId,
+            Name = folder.Name ?? string.Empty,
+            Description = folder.Description ?? string.Empty,
+            CreatedAt = folder.CreatedAt,
+            UpdatedAt = folder.UpdatedAt
+        };
+
+        public void DeletePrompt(int promptId) => prompts.Delete(promptId);
+
+        public void DeleteFolder(int folderId)
+        {
+            var descendants = GetFolderAndDescendantIds(folderId);
+
+            foreach (var prompt in prompts.Find(prompt => prompt.FolderId != null && descendants.Contains(prompt.FolderId.Value)))
+            {
+                prompts.Delete(prompt.Id);
+            }
+
+            foreach (var id in descendants)
+            {
+                folders.Delete(id);
+            }
+        }
+
+        private HashSet<int> GetFolderAndDescendantIds(int folderId)
+        {
+            var allFolders = GetFolders();
+            var ids = new HashSet<int> { folderId };
+            var changed = true;
+
+            while (changed)
+            {
+                changed = false;
+
+                foreach (var folder in allFolders)
+                {
+                    if (folder.ParentFolderId is int parentId && ids.Contains(parentId) && ids.Add(folder.Id))
+                    {
+                        changed = true;
+                    }
+                }
+            }
+
+            return ids;
+        }
+
+        public void Dispose() => database?.Dispose();
+
+    }
+}

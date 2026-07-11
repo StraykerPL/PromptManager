@@ -1,6 +1,6 @@
 # Prompt Manager Documentation
 
-<img src="../PromptManager/Resources/Images/icon.ico" alt="Prompt Manager icon" width="96" height="96">
+<img src="../PromptManager.UI/Assets/icon.ico" alt="Prompt Manager icon" width="96" height="96">
 
 This folder contains the project documentation that can be used directly in the repository or copied into a wiki.
 
@@ -14,7 +14,7 @@ This folder contains the project documentation that can be used directly in the 
 
 ## Project Summary
 
-Prompt Manager is a local-first .NET MAUI app for managing reusable prompts. The Windows desktop target is the primary validation path. The app stores data locally in a LiteDB file under the MAUI app data directory and exposes a simple two-pane UI:
+Prompt Manager is a local-first Avalonia app for managing reusable prompts on Windows and Linux. It stores data locally in LiteDB and exposes a simple two-pane UI:
 
 - Left pane: search, folder tree, flat prompt list, and quick copy actions.
 - Right pane: prompt or folder editor.
@@ -24,7 +24,7 @@ Prompt Manager is a local-first .NET MAUI app for managing reusable prompts. The
 
 When updating docs:
 
-- Keep commands Windows-first unless the change specifically targets another platform.
+- Keep command examples directly usable on Windows and Linux. Clearly label alternatives when a command genuinely differs by platform.
 - Update the user guide for visible UI or workflow changes.
 - Update architecture or storage docs for model, repository, service, or persistence changes.
 - Update troubleshooting when a recurring setup or runtime issue is discovered.

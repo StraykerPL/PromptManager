@@ -1,0 +1,406 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:models="clr-namespace:PromptManager.Models;assembly=PromptManager.Core"
+        xmlns:converters="clr-namespace:PromptManager.UI.Converters"
+        x:Class="PromptManager.UI.Views.MainWindow"
+        Title="Prompt Manager"
+        Width="1180"
+        Height="760"
+        MinWidth="920"
+        MinHeight="620">
+  <Window.Resources>
+    <converters:IndentToThicknessConverter x:Key="IndentToThicknessConverter" />
+  </Window.Resources>
+  <Grid>
+    <Grid RowDefinitions="Auto,*"
+          ColumnDefinitions="320,*"
+          Margin="18"
+          ColumnSpacing="18"
+          RowSpacing="14">
+      <Grid Grid.ColumnSpan="2"
+            ColumnDefinitions="*,Auto,Auto,Auto,Auto"
+            ColumnSpacing="10">
+        <TextBlock Text="Prompt Manager"
+                   FontSize="26"
+                   FontWeight="Bold" />
+        <Button Grid.Column="1"
+                Content="Settings"
+                Command="{Binding ShowSettingsCommand}" />
+        <Button Grid.Column="2"
+                Content="{Binding BrowseModeText}"
+                Command="{Binding ToggleBrowseModeCommand}" />
+        <Button Grid.Column="3"
+                Content="New folder"
+                Command="{Binding NewFolderCommand}" />
+        <Button Grid.Column="4"
+                Content="New prompt"
+                Command="{Binding NewPromptCommand}" />
+      </Grid>
+
+      <Border Grid.Row="1" Classes="panel">
+        <Grid RowDefinitions="Auto,*"
+              Margin="12"
+              RowSpacing="10">
+          <TextBox Watermark="Search prompts"
+                   Text="{Binding SearchText, Mode=TwoWay}" />
+          <ListBox Grid.Row="1"
+                   ItemsSource="{Binding TreeNodes}"
+                   Background="Transparent"
+                   BorderThickness="0"
+                   SelectionMode="Single">
+            <ListBox.DataTemplates>
+              <DataTemplate DataType="models:PromptTreeNode">
+                <Grid Margin="{Binding Indent, Converter={StaticResource IndentToThicknessConverter}}"
+                      ColumnDefinitions="28,*,Auto"
+                      RowDefinitions="Auto,Auto"
+                      Background="#161A1E"
+                      PointerPressed="OnTreeNodePointerPressed">
+                  <TextBlock Text="{Binding Icon}"
+                             Grid.RowSpan="2"
+                             Foreground="#9CA3AF"
+                             FontSize="16"
+                             HorizontalAlignment="Center"
+                             VerticalAlignment="Center" />
+                  <TextBlock Grid.Column="1"
+                             Text="{Binding Name}"
+                             FontWeight="Bold"
+                             TextTrimming="CharacterEllipsis" />
+                  <Button Grid.Column="2"
+                          Grid.RowSpan="2"
+                          Content="Copy"
+                          FontSize="12"
+                          Padding="10,4"
+                          MinHeight="30"
+                          VerticalAlignment="Center"
+                          IsVisible="{Binding IsPrompt}"
+                          Command="{Binding DataContext.CopyFromListCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                          CommandParameter="{Binding}" />
+                  <TextBlock Grid.Row="1"
+                             Grid.Column="1"
+                             Grid.ColumnSpan="2"
+                             Text="{Binding Details}"
+                             Foreground="#7C8794"
+                             FontSize="12"
+                             TextTrimming="CharacterEllipsis" />
+                </Grid>
+              </DataTemplate>
+            </ListBox.DataTemplates>
+          </ListBox>
+        </Grid>
+      </Border>
+
+      <Grid Grid.Row="1"
+            Grid.Column="1"
+            RowDefinitions="Auto,*"
+            RowSpacing="14">
+        <Border Classes="panel">
+          <Grid Margin="12"
+                ColumnDefinitions="*,Auto,Auto"
+                ColumnSpacing="10">
+            <TextBlock Text="{Binding CurrentModeText}"
+                       FontSize="18"
+                       FontWeight="Bold"
+                       VerticalAlignment="Center" />
+            <Button Grid.Column="1"
+                    Content="Copy prompt"
+                    IsVisible="{Binding CanCopyPrompt}"
+                    Command="{Binding CopyPromptCommand}" />
+            <Button Grid.Column="2"
+                    Classes="secondary"
+                    Content="Delete"
+                    IsVisible="{Binding CanDelete}"
+                    Command="{Binding DeleteCommand}" />
+          </Grid>
+        </Border>
+
+        <ScrollViewer Grid.Row="1">
+          <StackPanel Spacing="14">
+            <Border Classes="panel"
+                    IsVisible="{Binding IsPromptEditorVisible}">
+              <Grid Margin="14"
+                    RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto"
+                    RowSpacing="10">
+                <TextBlock Text="Name" Foreground="#CBD5E1" />
+                <TextBox Grid.Row="1"
+                         Watermark="Prompt name"
+                         Text="{Binding PromptName, Mode=TwoWay}" />
+                <TextBlock Grid.Row="2"
+                           Text="Description"
+                           Foreground="#CBD5E1" />
+                <TextBox Grid.Row="3"
+                         Height="72"
+                         AcceptsReturn="True"
+                         Watermark="Short description"
+                         Text="{Binding PromptDescription, Mode=TwoWay}" />
+                <Grid Grid.Row="4"
+                      ColumnDefinitions="*,*"
+                      ColumnSpacing="10">
+                  <StackPanel Spacing="6">
+                    <TextBlock Text="Tags" Foreground="#CBD5E1" />
+                    <ItemsControl ItemsSource="{Binding PromptTagChips}">
+                      <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                          <WrapPanel />
+                        </ItemsPanelTemplate>
+                      </ItemsControl.ItemsPanel>
+                      <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                          <Button Content="{Binding Name}"
+                                  Margin="0,0,8,8"
+                                  FontSize="12"
+                                  Padding="12,4"
+                                  MinHeight="32"
+                                  Background="{Binding Background}"
+                                  Foreground="{Binding Foreground}"
+                                  BorderBrush="#0099FF"
+                                  BorderThickness="1"
+                                  Command="{Binding DataContext.ToggleTagCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                  CommandParameter="{Binding}" />
+                        </DataTemplate>
+                      </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                  </StackPanel>
+                  <StackPanel Grid.Column="1" Spacing="6">
+                    <TextBlock Text="Folder" Foreground="#CBD5E1" />
+                    <ComboBox ItemsSource="{Binding FolderChoices}"
+                              SelectedItem="{Binding SelectedPromptFolder, Mode=TwoWay}" />
+                  </StackPanel>
+                </Grid>
+                <StackPanel Grid.Row="5" Spacing="8">
+                  <Grid ColumnDefinitions="*,Auto"
+                        ColumnSpacing="10">
+                    <TextBlock Text="{Binding PromptQualityText}" Foreground="#CBD5E1" />
+                    <TextBlock Grid.Column="1"
+                               Text="1 does not work | 10 works perfectly"
+                               Foreground="#7C8794"
+                               FontSize="12" />
+                  </Grid>
+                  <Slider Minimum="1"
+                          Maximum="10"
+                          TickFrequency="1"
+                          IsSnapToTickEnabled="True"
+                          Value="{Binding PromptQuality, Mode=TwoWay}" />
+                  <StackPanel Spacing="6">
+                    <TextBlock Text="AI model" Foreground="#CBD5E1" />
+                    <ComboBox ItemsSource="{Binding ModelChoices}"
+                              SelectedItem="{Binding SelectedModel, Mode=TwoWay}" />
+                  </StackPanel>
+                </StackPanel>
+                <StackPanel Grid.Row="6" Spacing="6">
+                  <TextBlock Text="Prompt" Foreground="#CBD5E1" />
+                  <TextBox Height="260"
+                           AcceptsReturn="True"
+                           Watermark="Write the prompt text here..."
+                           Text="{Binding PromptContent, Mode=TwoWay}" />
+                </StackPanel>
+              </Grid>
+            </Border>
+
+            <Border Classes="panel"
+                    IsVisible="{Binding IsFolderEditorVisible}">
+              <Grid Margin="14"
+                    RowDefinitions="Auto,Auto,Auto,Auto,Auto"
+                    RowSpacing="10">
+                <TextBlock Text="Folder name" Foreground="#CBD5E1" />
+                <TextBox Grid.Row="1"
+                         Watermark="Folder name"
+                         Text="{Binding FolderName, Mode=TwoWay}" />
+                <TextBlock Grid.Row="2"
+                           Text="Description"
+                           Foreground="#CBD5E1" />
+                <TextBox Grid.Row="3"
+                         Height="90"
+                         AcceptsReturn="True"
+                         Watermark="What belongs in this folder?"
+                         Text="{Binding FolderDescription, Mode=TwoWay}" />
+                <StackPanel Grid.Row="4" Spacing="6">
+                  <TextBlock Text="Parent folder" Foreground="#CBD5E1" />
+                  <ComboBox ItemsSource="{Binding FolderChoices}"
+                            SelectedItem="{Binding SelectedParentFolder, Mode=TwoWay}" />
+                </StackPanel>
+              </Grid>
+            </Border>
+
+            <Button Content="Save"
+                    FontWeight="Bold"
+                    Command="{Binding SaveCommand}" />
+          </StackPanel>
+        </ScrollViewer>
+      </Grid>
+    </Grid>
+
+    <Grid IsVisible="{Binding IsSettingsVisible}"
+          Background="#99000000">
+      <Border Width="720"
+              HorizontalAlignment="Center"
+              VerticalAlignment="Center"
+              Classes="panel">
+        <Grid Margin="16"
+              RowDefinitions="Auto,*,Auto"
+              RowSpacing="12">
+          <Grid ColumnDefinitions="*,Auto"
+                ColumnSpacing="10">
+            <TextBlock Text="Settings"
+                       FontSize="18"
+                       FontWeight="Bold"
+                       VerticalAlignment="Center" />
+            <Button Grid.Column="1"
+                    Content="About"
+                    Command="{Binding ShowAboutCommand}" />
+          </Grid>
+          <ScrollViewer Grid.Row="1"
+                        MaxHeight="620">
+            <StackPanel Spacing="18">
+              <StackPanel Spacing="10">
+                <TextBlock Text="Data" FontSize="16" FontWeight="Bold" />
+                <StackPanel Orientation="Horizontal" Spacing="10">
+                  <Button Content="Import" Command="{Binding ImportCommand}" />
+                  <Button Content="Export" Command="{Binding ExportCommand}" />
+                </StackPanel>
+              </StackPanel>
+
+              <StackPanel Spacing="10">
+                <TextBlock Text="Database storage" FontSize="16" FontWeight="Bold" />
+                <TextBlock Text="{Binding DatabaseLocationKind}" Foreground="#0099FF" />
+                <TextBox Text="{Binding DatabaseDirectory}" IsReadOnly="True" />
+                <StackPanel Orientation="Horizontal" Spacing="10">
+                  <Button Content="Choose folder" Command="{Binding ChooseDatabaseDirectoryCommand}" />
+                  <Button Content="Restore default"
+                          Classes="secondary"
+                          Command="{Binding RestoreDefaultDatabaseDirectoryCommand}" />
+                </StackPanel>
+                <TextBlock Text="The database filename is always prompts.db. Location changes take effect after restart."
+                           Foreground="#CBD5E1"
+                           TextWrapping="Wrap" />
+              </StackPanel>
+
+              <StackPanel Spacing="10">
+                <TextBlock Text="Tags" FontSize="16" FontWeight="Bold" />
+                <Grid ColumnDefinitions="*,Auto"
+                      ColumnSpacing="10">
+                  <TextBox Watermark="New tag"
+                           Text="{Binding NewTagName, Mode=TwoWay}" />
+                  <Button Grid.Column="1"
+                          Content="Add"
+                          Command="{Binding AddTagCommand}" />
+                </Grid>
+                <ScrollViewer MaxHeight="220">
+                  <ItemsControl ItemsSource="{Binding TagsDialogRows}">
+                    <ItemsControl.ItemTemplate>
+                      <DataTemplate>
+                        <Grid ColumnDefinitions="*,Auto"
+                              ColumnSpacing="10"
+                              Margin="0,0,0,8"
+                              Background="#20252B">
+                          <TextBlock Text="{Binding}"
+                                     Margin="10,6"
+                                     VerticalAlignment="Center" />
+                          <Button Grid.Column="1"
+                                  Classes="secondary"
+                                  Content="Remove"
+                                  FontSize="12"
+                                  Padding="10,4"
+                                  MinHeight="30"
+                                  Command="{Binding DataContext.RemoveTagCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                  CommandParameter="{Binding}" />
+                        </Grid>
+                      </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                  </ItemsControl>
+                </ScrollViewer>
+              </StackPanel>
+
+              <StackPanel Spacing="10">
+                <TextBlock Text="AI models" FontSize="16" FontWeight="Bold" />
+                <Grid ColumnDefinitions="*,Auto"
+                      ColumnSpacing="10">
+                  <TextBox Watermark="New model"
+                           Text="{Binding NewModelName, Mode=TwoWay}" />
+                  <Button Grid.Column="1"
+                          Content="Add"
+                          Command="{Binding AddModelCommand}" />
+                </Grid>
+                <ScrollViewer MaxHeight="220">
+                  <ItemsControl ItemsSource="{Binding ModelsDialogRows}">
+                    <ItemsControl.ItemTemplate>
+                      <DataTemplate>
+                        <Grid ColumnDefinitions="*,Auto"
+                              ColumnSpacing="10"
+                              Margin="0,0,0,8"
+                              Background="#20252B">
+                          <TextBlock Text="{Binding}"
+                                     Margin="10,6"
+                                     VerticalAlignment="Center" />
+                          <Button Grid.Column="1"
+                                  Classes="secondary"
+                                  Content="Remove"
+                                  FontSize="12"
+                                  Padding="10,4"
+                                  MinHeight="30"
+                                  Command="{Binding DataContext.RemoveModelCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                  CommandParameter="{Binding}" />
+                        </Grid>
+                      </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                  </ItemsControl>
+                </ScrollViewer>
+              </StackPanel>
+            </StackPanel>
+          </ScrollViewer>
+          <Button Grid.Row="2"
+                  Content="Close"
+                  HorizontalAlignment="Right"
+                  Command="{Binding CloseSettingsCommand}" />
+        </Grid>
+      </Border>
+    </Grid>
+
+    <Grid IsVisible="{Binding IsAboutVisible}"
+          Background="#99000000">
+      <Border Width="420"
+              HorizontalAlignment="Center"
+              VerticalAlignment="Center"
+              Classes="panel">
+        <Grid Margin="16"
+              RowDefinitions="Auto,Auto,Auto,Auto"
+              RowSpacing="14">
+          <TextBlock Text="About"
+                     FontSize="18"
+                     FontWeight="Bold" />
+          <StackPanel Grid.Row="1"
+                      Spacing="10"
+                      HorizontalAlignment="Center">
+            <Image Source="/Assets/icon.ico"
+                   Width="96"
+                   Height="96" />
+            <TextBlock Text="Prompt Manager"
+                       FontSize="20"
+                       FontWeight="Bold"
+                       TextAlignment="Center" />
+          </StackPanel>
+          <StackPanel Grid.Row="2" Spacing="8">
+            <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
+              <TextBlock Text="App version" Foreground="#CBD5E1" />
+              <TextBlock Grid.Column="1" Text="{Binding AppVersion}" />
+            </Grid>
+            <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
+              <TextBlock Text=".NET version" Foreground="#CBD5E1" />
+              <TextBlock Grid.Column="1" Text="{Binding DotNetVersion}" />
+            </Grid>
+            <TextBlock Text="Copyright © 2018-actual Daniel Strayker Nowak All rights reserved"
+                       Foreground="#CBD5E1"
+                       TextWrapping="Wrap" />
+            <Button Classes="subtle"
+                    Content="https://github.com/StraykerPL/PromptManager"
+                    HorizontalAlignment="Left"
+                    Command="{Binding OpenRepositoryCommand}" />
+          </StackPanel>
+          <Button Grid.Row="3"
+                  Content="Close"
+                  HorizontalAlignment="Right"
+                  Command="{Binding CloseAboutCommand}" />
+        </Grid>
+      </Border>
+    </Grid>
+  </Grid>
+</Window>

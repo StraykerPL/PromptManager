@@ -2,43 +2,34 @@ name: .NET
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [main]
   pull_request:
-    branches: [ "main" ]
+    branches: [main]
 
 permissions:
   contents: read
 
 jobs:
-  build:
-    runs-on: windows-latest
-    env:
-      WINDOWS_TFM: net10.0-windows10.0.19041.0
-      WINDOWS_RID: win-x64
+  build-and-test:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, ubuntu-latest]
+    runs-on: ${{ matrix.os }}
 
     steps:
-    - name: Checkout
-      uses: actions/checkout@v6
-
-    - name: Setup .NET
-      uses: actions/setup-dotnet@v5
-      with:
-        dotnet-version: 10.0.x
-
-    - name: Restore .NET workloads
-      run: dotnet workload restore PromptManager/PromptManager.csproj -p:TargetFrameworks=${{ env.WINDOWS_TFM }} -p:RuntimeIdentifier=${{ env.WINDOWS_RID }} -p:EnableWindowsTargeting=true
-
-    - name: Restore app dependencies
-      run: dotnet restore PromptManager/PromptManager.csproj -r ${{ env.WINDOWS_RID }} -p:TargetFrameworks=${{ env.WINDOWS_TFM }} -p:EnableWindowsTargeting=true
-
-    - name: Restore test dependencies
-      run: dotnet restore PromptManager.UnitTests/PromptManager.UnitTests.csproj -p:EnableWindowsTargeting=true
-
-    - name: Build app
-      run: dotnet build PromptManager/PromptManager.csproj -f ${{ env.WINDOWS_TFM }} -r ${{ env.WINDOWS_RID }} --configuration Release --no-restore -p:TargetFrameworks=${{ env.WINDOWS_TFM }} -p:EnableWindowsTargeting=true
-
-    - name: Build tests
-      run: dotnet build PromptManager.UnitTests/PromptManager.UnitTests.csproj --configuration Release --no-restore -p:EnableWindowsTargeting=true
-
-    - name: Test
-      run: dotnet test PromptManager.UnitTests/PromptManager.UnitTests.csproj --configuration Release --no-build --verbosity normal -p:EnableWindowsTargeting=true
+      - name: Checkout
+        uses: actions/checkout@v6
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v5
+        with:
+          global-json-file: global.json
+      - name: Install Linux desktop libraries
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install --yes libx11-6 libice6 libsm6 libfontconfig1
+      - name: Restore
+        run: dotnet restore PromptManager.slnx
+      - name: Build
+        run: dotnet build PromptManager.slnx --configuration Release --no-restore
+      - name: Test
+        run: dotnet test PromptManager.UnitTests/PromptManager.UnitTests.csproj --configuration Release --no-build --verbosity normal

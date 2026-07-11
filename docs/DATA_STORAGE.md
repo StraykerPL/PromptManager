@@ -4,13 +4,18 @@ Prompt Manager stores data locally with LiteDB.
 
 ## Database Location
 
+A saved custom directory wins over all defaults. Without one, compile-time Debug builds use `AppContext.BaseDirectory`; Release builds use the platform locations below. Runtime environment names do not change a packaged Release build. The database filename is always `prompts.db`.
+
 The database file is created at:
 
 ```text
-FileSystem.AppDataDirectory/prompts.db
+Windows: %APPDATA%\PromptManager\prompts.db
+Linux:  ${XDG_DATA_HOME:-$HOME/.local/share}/PromptManager/prompts.db
 ```
 
-The exact physical path depends on the platform and app packaging context. On Windows, it is under the app data area resolved by .NET MAUI.
+On Linux, an absolute `XDG_DATA_HOME` is honored. When it is unset, blank, or relative, the app follows the XDG fallback and uses `$HOME/.local/share/PromptManager/prompts.db`. If the required user directory cannot be determined, startup reports an error instead of creating a relative data directory.
+
+The optional override is stored in `settings.json` in platform app-data even when the database is elsewhere. It is written with a same-directory temporary file and atomic replacement. Transfers use repository export/import instead of copying an open LiteDB file. Sources are retained; replaced destinations receive `prompts.location-backup-<timestamp>.db`. Location changes activate after restart.
 
 ## Collections
 
@@ -106,4 +111,4 @@ Importing a JSON file replaces the current LiteDB contents after user confirmati
 - Prompt `FolderId` values that do not exist in the imported folder set are cleared.
 - Folder `ParentFolderId` values that are missing, self-referencing, or cyclic are cleared.
 
-The JSON file picker is restricted to `.json` files on Windows.
+Avalonia passes the `.json` file filter to the native storage provider on Windows and Linux. The exact appearance is controlled by the active desktop environment, but import and export request JSON files on both platforms.

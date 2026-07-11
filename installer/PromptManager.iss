@@ -2,12 +2,12 @@
 #define MyAppExeName "PromptManager.exe"
 #define MyAppPublisher "Strayker Software"
 #define MyAppVersion "1.0"
-#define MyAppTargetFramework "net10.0-windows10.0.19041.0"
+#define MyAppTargetFramework "net10.0"
 #define MyAppRuntime "win-x64"
-#define MyAppPublishDir "..\PromptManager\bin\Release\" + MyAppTargetFramework + "\" + MyAppRuntime + "\publish"
+#define MyAppPublishDir "..\PromptManager.UI\bin\Release\" + MyAppTargetFramework + "\" + MyAppRuntime + "\publish"
 
 ; From the repository root, build the publish folder before compiling this installer:
-;   dotnet publish .\PromptManager\PromptManager.csproj -c Release -f net10.0-windows10.0.19041.0 -r win-x64 --self-contained true
+;   dotnet publish .\PromptManager.UI\PromptManager.UI.csproj -c Release -r win-x64 --self-contained true
 ;   ISCC.exe .\installer\PromptManager.iss
 
 [Setup]
@@ -20,7 +20,7 @@ DefaultGroupName={#MyAppName}
 DisableProgramGroupPage=yes
 OutputDir=..\build
 OutputBaseFilename=PromptManagerSetup-{#MyAppVersion}-x64
-SetupIconFile=..\PromptManager\Resources\Images\icon.ico
+SetupIconFile=..\PromptManager.UI\Assets\icon.ico
 UninstallDisplayIcon={app}\{#MyAppExeName}
 Compression=lzma2
 SolidCompression=yes
