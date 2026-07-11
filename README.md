@@ -80,9 +80,20 @@ Build the solution:
 dotnet build PromptManager.slnx
 ```
 
+## Linux Deployment
+
+On Debian and Debian-derived systems, create a self-contained `.deb` package with the interactive repository script:
+
+```sh
+./linux-deploy.sh
+```
+
+Install the .NET 10 SDK, `dpkg-dev`, `lintian`, and `imagemagick` first. The script asks for version, architecture, and maintainer metadata, runs the Release tests and build, creates the package and SHA-256 checksum under `artifacts/deb/`, and optionally performs a GUI smoke test and local installation. See the [Linux Deployment Guide](docs/LINUX_DEPLOYMENT.md) for the complete procedure.
+
 ## Documentation
 
 - [Documentation Index](docs/README.md)
+- [Linux Deployment](docs/LINUX_DEPLOYMENT.md)
 - [User Guide](docs/USER_GUIDE.md)
 - [Development Guide](docs/DEVELOPMENT.md)
 - [Architecture](docs/ARCHITECTURE.md)

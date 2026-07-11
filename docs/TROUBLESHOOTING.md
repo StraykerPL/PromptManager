@@ -33,6 +33,19 @@ sudo apt-get install libx11-6 libice6 libsm6 libfontconfig1
 
 Other distributions use different package names. Find packages providing X11, ICE, SM, and Fontconfig runtime libraries for that distribution.
 
+## Linux Deployment Script Fails
+
+Run `./linux-deploy.sh` from the repository root. If it reports a missing command, install the packaging prerequisites:
+
+```sh
+sudo apt-get update
+sudo apt-get install dpkg-dev lintian imagemagick
+```
+
+Use an application version without a leading `v`, choose only `amd64` or `arm64`, and enter the maintainer as `Name <email>`. Restore and publish require NuGet access. A GUI smoke test requires an active desktop session; answer `n` when packaging in a headless environment.
+
+If Lintian fails, review its findings before choosing whether to create the checksum. Installation or executable-layout errors should not be ignored. See the [Linux Deployment Guide](LINUX_DEPLOYMENT.md) for output paths, checksum verification, and installation steps.
+
 ## Unit Tests Do Not Discover Tests
 
 Run the test project directly:

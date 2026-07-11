@@ -73,6 +73,7 @@ Update documentation in the same change when behavior changes:
 - Build/test workflow changes: update [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md).
 - Service/model/storage changes: update [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) or [docs/DATA_STORAGE.md](docs/DATA_STORAGE.md).
 - Known setup failures: update [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md).
+- Linux packaging changes: update [docs/LINUX_DEPLOYMENT.md](docs/LINUX_DEPLOYMENT.md) and validate `linux-deploy.sh`.
 
 ## Pull Request Checklist
 

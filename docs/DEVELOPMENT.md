@@ -89,7 +89,17 @@ For platform-sensitive changes, run the applicable smoke test on both Windows an
 
 ## Packaging
 
-`installer/PromptManager.iss` is the Windows-only Inno Setup packaging path and is not part of the cross-platform development build. A Linux package is not currently provided; use a separate runtime-specific publish process such as `dotnet publish -r linux-x64`. Keep publish and installer output out of source control.
+`installer/PromptManager.iss` is the Windows-only Inno Setup packaging path and is not part of the cross-platform development build.
+
+On Debian and Debian-derived Linux systems, run the interactive deployment script from the repository root:
+
+```sh
+./linux-deploy.sh
+```
+
+The script asks for the application version, Debian package version, target architecture, and maintainer metadata. It then restores, tests, builds, publishes, assembles and checks the `.deb`, and writes a SHA-256 checksum under `artifacts/deb/`. GUI smoke testing and local installation are optional prompts. Install the .NET 10 SDK plus `dpkg-dev`, `lintian`, and `imagemagick` before running it. See the [Linux Deployment Guide](LINUX_DEPLOYMENT.md) for prerequisites, architecture mappings, output, validation, installation, upgrades, and removal.
+
+Keep publish and installer output out of source control.
 
 ## Generated Output
 

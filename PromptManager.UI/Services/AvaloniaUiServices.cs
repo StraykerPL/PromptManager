@@ -213,8 +213,8 @@ namespace PromptManager.UI.Services
 
         private static Window CreateWindow(StackPanel panel) => new()
             {
-                Width = 420,
-                SizeToContent = SizeToContent.Height,
+                MinWidth = 420,
+                SizeToContent = SizeToContent.WidthAndHeight,
                 CanResize = false,
                 WindowStartupLocation = WindowStartupLocation.CenterOwner,
                 Background = global::Avalonia.Media.Brush.Parse("#161A1E"),

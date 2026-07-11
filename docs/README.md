@@ -8,6 +8,7 @@ This folder contains the project documentation that can be used directly in the 
 
 - [User Guide](USER_GUIDE.md) - how to use Prompt Manager from the main app window.
 - [Development Guide](DEVELOPMENT.md) - local setup, build, test, and contribution workflow.
+- [Linux Deployment](LINUX_DEPLOYMENT.md) - build, verify, install, upgrade, and remove a local `.deb` package.
 - [Architecture](ARCHITECTURE.md) - app structure, services, models, and UI flow.
 - [Data Storage](DATA_STORAGE.md) - LiteDB collections, normalization, backup behavior, and data ownership.
 - [Troubleshooting](TROUBLESHOOTING.md) - common build, runtime, and storage issues.
