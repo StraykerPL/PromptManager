@@ -6,6 +6,9 @@ Prompt Manager is an Avalonia desktop app for saving, organizing, searching, rat
 
 The app is useful when you maintain a personal library of prompts for different tools, models, projects, or quality levels. Prompts can be grouped into nested folders, tagged, associated with an AI model, scored from 1 to 10, searched, and copied directly from the list or editor.
 
+> [!CAUTION]
+> This project is 100% vibe-coded, even end user's documentation is fully generated. I didin't read even single line of text in this repo (project's logo was also generated). Please, follow your common sense when interacting with this repo.
+
 ## Features
 
 - Local prompt library stored with LiteDB.
