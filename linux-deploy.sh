@@ -123,7 +123,7 @@ install -d \
 cp -a "$publish_root/." "$package_root/opt/promptmanager/"
 chmod 0755 "$package_root/opt/promptmanager/PromptManager.UI"
 ln -s /opt/promptmanager/PromptManager.UI "$package_root/usr/bin/promptmanager"
-"${image_command[@]}" 'PromptManager.UI/Assets/icon.ico[0]' \
+"${image_command[@]}" 'PromptManager.UI/Assets/icon.ico[-1]' \
     "$package_root/usr/share/pixmaps/promptmanager.png"
 chmod 0644 "$package_root/usr/share/pixmaps/promptmanager.png"
 install -m 0644 LICENSE.md "$package_root/usr/share/doc/promptmanager/copyright"
