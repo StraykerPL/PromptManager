@@ -19,9 +19,21 @@ namespace PromptManager.UI.Views
             };
         }
 
+        private void OnTreeNodeKeyDown(object? sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Enter &&
+                sender is ListBox { SelectedItem: PromptTreeNode node } &&
+                DataContext is MainWindowViewModel viewModel)
+            {
+                viewModel.SelectTreeNode(node);
+                e.Handled = true;
+            }
+        }
+
         private void OnTreeNodePointerPressed(object? sender, PointerPressedEventArgs e)
         {
-            if (sender is Control { DataContext: PromptTreeNode node } &&
+            if (e.GetCurrentPoint(this).Properties.IsLeftButtonPressed &&
+                sender is Control { DataContext: PromptTreeNode node } &&
                 DataContext is MainWindowViewModel viewModel)
             {
                 viewModel.SelectTreeNode(node);

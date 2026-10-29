@@ -38,35 +38,78 @@
                 Command="{Binding NewPromptCommand}" />
       </Grid>
 
-      <Border Grid.Row="1" Classes="panel">
+      <Border Grid.Row="1" Classes="panel"
+              Background="#1A1D24"
+              BorderBrush="#2D3748"
+              BorderThickness="1">
         <Grid RowDefinitions="Auto,*"
               Margin="12"
               RowSpacing="10">
           <TextBox Watermark="Search prompts"
-                   Text="{Binding SearchText, Mode=TwoWay}" />
+                   Text="{Binding SearchText, Mode=TwoWay}"
+                   Background="#23272F"
+                   BorderBrush="#374151"
+                   BorderThickness="1"
+                   Foreground="#E2E8F0" />
           <ListBox Grid.Row="1"
                    ItemsSource="{Binding TreeNodes}"
                    Background="Transparent"
+                   Foreground="#E2E8F0"
                    BorderThickness="0"
-                   SelectionMode="Single">
-            <ListBox.DataTemplates>
+                   SelectionMode="Single"
+                   KeyDown="OnTreeNodeKeyDown">
+            <ListBox.Styles>
+              <Style Selector="ListBoxItem">
+                <Setter Property="Padding" Value="8,4" />
+                <Setter Property="Margin" Value="2,2" />
+                <Setter Property="CornerRadius" Value="6" />
+                <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+              </Style>
+              <Style Selector="ListBoxItem:selected /template/ ContentPresenter">
+                <Setter Property="Background" Value="#374151" />
+              </Style>
+              <Style Selector="ListBoxItem:focus-visible /template/ ContentPresenter">
+                <Setter Property="BorderBrush" Value="#0099FF" />
+              </Style>
+            </ListBox.Styles>
+            <ListBox.ItemTemplate>
               <DataTemplate DataType="models:PromptTreeNode">
                 <Grid Margin="{Binding Indent, Converter={StaticResource IndentToThicknessConverter}}"
-                      ColumnDefinitions="28,*,Auto"
+                      ColumnDefinitions="24,24,*,Auto"
                       RowDefinitions="Auto,Auto"
-                      Background="#161A1E"
+                      Background="Transparent"
                       PointerPressed="OnTreeNodePointerPressed">
                   <TextBlock Text="{Binding Icon}"
+                             IsVisible="{Binding IsFolder}"
                              Grid.RowSpan="2"
-                             Foreground="#9CA3AF"
-                             FontSize="16"
-                             HorizontalAlignment="Center"
+                             Foreground="#6B7280"
+                             FontSize="12"
                              VerticalAlignment="Center" />
                   <TextBlock Grid.Column="1"
+                             Grid.RowSpan="2"
+                             Text="📁"
+                             IsVisible="{Binding IsFolder}"
+                             Foreground="#0099FF"
+                             FontSize="16"
+                             VerticalAlignment="Center" />
+                  <TextBlock Grid.Column="1"
+                             Grid.RowSpan="2"
+                             Text="⚡"
+                             IsVisible="{Binding IsPrompt}"
+                             Foreground="#10B981"
+                             FontSize="16"
+                             VerticalAlignment="Center" />
+                  <TextBlock Grid.Column="2"
                              Text="{Binding Name}"
-                             FontWeight="Bold"
+                             FontWeight="SemiBold"
                              TextTrimming="CharacterEllipsis" />
-                  <Button Grid.Column="2"
+                  <TextBlock Grid.Column="2"
+                             Grid.Row="1"
+                             Text="{Binding Details}"
+                             Foreground="#9CA3AF"
+                             FontSize="11"
+                             TextTrimming="CharacterEllipsis" />
+                  <Button Grid.Column="3"
                           Grid.RowSpan="2"
                           Content="Copy"
                           FontSize="12"
@@ -76,16 +119,9 @@
                           IsVisible="{Binding IsPrompt}"
                           Command="{Binding DataContext.CopyFromListCommand, RelativeSource={RelativeSource AncestorType=Window}}"
                           CommandParameter="{Binding}" />
-                  <TextBlock Grid.Row="1"
-                             Grid.Column="1"
-                             Grid.ColumnSpan="2"
-                             Text="{Binding Details}"
-                             Foreground="#7C8794"
-                             FontSize="12"
-                             TextTrimming="CharacterEllipsis" />
                 </Grid>
               </DataTemplate>
-            </ListBox.DataTemplates>
+            </ListBox.ItemTemplate>
           </ListBox>
         </Grid>
       </Border>
